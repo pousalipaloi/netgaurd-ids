@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NetGuard IDS Dashboard</title>
+  <link rel="stylesheet" href="src/styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <div class="brand-mark">NG</div>
+        <div>
+          <h1>NetGuard IDS</h1>
+          <p>Traffic Analysis Platform</p>
+        </div>
+      </div>
+
+      <nav class="nav-list">
+        <button class="nav-item active" data-section="dashboard">Dashboard</button>
+        <button class="nav-item" data-section="alerts">Alerts</button>
+        <button class="nav-item" data-section="siem">SIEM Logs</button>
+        <button class="nav-item" data-section="cases">Case Study</button>
+      </nav>
+
+      <div class="sensor-box">
+        <span class="pulse"></span>
+        <div>
+          <strong>Live Monitoring</strong>
+          <small>eth0 packet stream active</small>
+        </div>
+      </div>
+    </aside>
+
+    <section class="workspace">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Network Security Operations</p>
+          <h2 id="pageTitle">Dashboard</h2>
+        </div>
+        <div class="top-actions">
+          <select id="severityFilter" aria-label="Filter alerts by severity">
+            <option value="all">All Severity</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+          </select>
+          <button id="pauseBtn" class="ghost-button" type="button">Pause</button>
+        </div>
+      </header>
+
+      <section class="stats-grid" aria-label="Network metrics">
+        <article class="metric">
+          <span>Packets / Sec</span>
+          <strong id="packetsMetric">0</strong>
+          <small>Live packet velocity</small>
+        </article>
+        <article class="metric">
+          <span>Anomaly Score</span>
+          <strong id="scoreMetric">0</strong>
+          <small>Machine learning risk index</small>
+        </article>
+        <article class="metric">
+          <span>Threats</span>
+          <strong id="threatMetric">0</strong>
+          <small>Suspicious events detected</small>
+        </article>
+        <article class="metric">
+          <span>Status</span>
+          <strong id="statusMetric">LOW</strong>
+          <small>Current environment risk</small>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <article class="panel wide" data-page="dashboard">
+          <div class="panel-heading">
+            <h3>Traffic Volume</h3>
+            <span>Last 30 seconds</span>
+          </div>
+          <canvas id="trafficCanvas" width="920" height="260" aria-label="Traffic volume chart"></canvas>
+        </article>
+
+        <article class="panel" data-page="dashboard">
+          <div class="panel-heading">
+            <h3>Protocol Split</h3>
+            <span>Observed flows</span>
+          </div>
+          <div id="protocolList" class="protocol-list"></div>
+        </article>
+
+        <article class="panel" data-page="dashboard alerts">
+          <div class="panel-heading">
+            <h3>Threat Alerts</h3>
+            <span id="alertCount">0 active</span>
+          </div>
+          <div id="alertList" class="alert-list"></div>
+        </article>
+
+        <article class="panel wide" data-page="dashboard siem">
+          <div class="panel-heading">
+            <h3>SIEM Event Stream</h3>
+            <span>Normalized security logs</span>
+          </div>
+          <div id="siemLog" class="log-list"></div>
+        </article>
+
+        <article class="panel wide" data-page="cases">
+          <div class="panel-heading">
+            <h3>Case Study: Brute Force SSH</h3>
+            <span>Investigation timeline</span>
+          </div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <b>09:14</b>
+              <p>Multiple failed SSH attempts from external IP 185.220.101.42.</p>
+            </div>
+            <div class="timeline-item">
+              <b>09:16</b>
+              <p>Anomaly score passed threshold after 83 failed logins.</p>
+            </div>
+            <div class="timeline-item">
+              <b>09:18</b>
+              <p>Firewall rule pushed to block the source address for 24 hours.</p>
+            </div>
+            <div class="timeline-item">
+              <b>09:21</b>
+              <p>Incident marked contained and exported to SIEM case queue.</p>
+            </div>
+          </div>
+        </article>
+      </section>
+    </section>
+  </main>
+
+  <script src="src/app.js"></script>
+</body>
+</html>

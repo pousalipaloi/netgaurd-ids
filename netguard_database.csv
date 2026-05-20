@@ -1,0 +1,26 @@
+record_id,timestamp,record_type,source_ip,destination_ip,protocol,destination_port,packets,bytes,anomaly_score,severity,event_name,status,siem_source,case_id,notes
+NG-0001,2026-05-18 09:00:00,traffic,192.168.1.10,172.217.166.46,HTTPS,443,1240,186000,18,low,Normal HTTPS traffic,allowed,netguard-sensor-01,,Standard encrypted web traffic
+NG-0002,2026-05-18 09:01:00,traffic,192.168.1.18,8.8.8.8,DNS,53,342,41040,14,low,Normal DNS queries,allowed,netguard-sensor-01,,DNS resolution activity
+NG-0003,2026-05-18 09:02:00,traffic,192.168.1.22,192.168.1.1,HTTP,80,615,92250,22,low,Internal HTTP request,allowed,netguard-sensor-01,,Internal application access
+NG-0004,2026-05-18 09:03:00,alert,185.220.101.42,192.168.1.15,TCP,22,820,98400,86,critical,Brute force SSH,blocked,netguard-ids,CASE-SSH-001,Repeated failed SSH login attempts
+NG-0005,2026-05-18 09:04:00,siem_log,185.220.101.42,192.168.1.15,TCP,22,820,98400,86,critical,SIEM brute force event,open,siem-forwarder,CASE-SSH-001,Alert forwarded to SIEM queue
+NG-0006,2026-05-18 09:05:00,traffic,192.168.1.31,142.250.183.14,HTTPS,443,980,147000,19,low,Browser traffic,allowed,netguard-sensor-01,,User web browsing activity
+NG-0007,2026-05-18 09:06:00,alert,10.0.0.44,192.168.1.1,TCP,1,1320,158400,74,high,Port scan detected,blocked,netguard-ids,CASE-SCAN-002,Source scanned multiple ports within two seconds
+NG-0008,2026-05-18 09:07:00,siem_log,10.0.0.44,192.168.1.1,TCP,1,1320,158400,74,high,SIEM port scan event,open,siem-forwarder,CASE-SCAN-002,Port scan normalized as reconnaissance event
+NG-0009,2026-05-18 09:08:00,traffic,192.168.1.27,1.1.1.1,DNS,53,278,33360,17,low,Resolver traffic,allowed,netguard-sensor-01,,Cloudflare DNS lookup activity
+NG-0010,2026-05-18 09:09:00,alert,192.168.1.44,45.33.32.156,TCP,4444,412,98900,91,critical,Suspicious outbound beacon,quarantined,netguard-ids,CASE-C2-003,Possible command-and-control beacon traffic
+NG-0011,2026-05-18 09:10:00,siem_log,192.168.1.44,45.33.32.156,TCP,4444,412,98900,91,critical,SIEM C2 beacon event,open,siem-forwarder,CASE-C2-003,Endpoint flagged for malware investigation
+NG-0012,2026-05-18 09:11:00,traffic,192.168.1.19,192.168.1.50,SMB,445,390,78000,30,medium,Internal SMB traffic,allowed,netguard-sensor-01,,File share communication
+NG-0013,2026-05-18 09:12:00,alert,192.168.1.19,192.168.1.50,SMB,445,1510,302000,68,high,Lateral movement attempt,blocked,netguard-ids,CASE-LAT-004,SMB connections attempted across multiple hosts
+NG-0014,2026-05-18 09:13:00,traffic,192.168.1.25,13.107.42.14,HTTPS,443,725,108750,21,low,Cloud service traffic,allowed,netguard-sensor-01,,Business application connection
+NG-0015,2026-05-18 09:14:00,alert,192.168.1.36,8.8.8.8,DNS,53,2190,350400,63,medium,DNS tunneling pattern,investigating,netguard-ids,CASE-DNS-005,Long DNS query strings indicate possible exfiltration
+NG-0016,2026-05-18 09:15:00,siem_log,192.168.1.36,8.8.8.8,DNS,53,2190,350400,63,medium,SIEM DNS tunneling event,open,siem-forwarder,CASE-DNS-005,DNS query length crossed anomaly threshold
+NG-0017,2026-05-18 09:16:00,traffic,192.168.1.12,192.168.1.70,ICMP,0,128,8192,12,low,ICMP health check,allowed,netguard-sensor-01,,Routine connectivity test
+NG-0018,2026-05-18 09:17:00,alert,203.0.113.77,192.168.1.20,UDP,80,48000,5760000,97,critical,DDoS pattern detected,blocked,netguard-ids,CASE-DDOS-006,UDP flood exceeded packet threshold
+NG-0019,2026-05-18 09:18:00,siem_log,203.0.113.77,192.168.1.20,UDP,80,48000,5760000,97,critical,SIEM DDoS event,open,siem-forwarder,CASE-DDOS-006,High-volume UDP flood forwarded to SIEM
+NG-0020,2026-05-18 09:19:00,traffic,192.168.1.33,151.101.1.69,HTTPS,443,870,130500,23,low,Content delivery traffic,allowed,netguard-sensor-01,,Normal CDN traffic
+NG-0021,2026-05-18 09:20:00,case_event,185.220.101.42,192.168.1.15,TCP,22,0,0,86,critical,Case opened,open,incident-console,CASE-SSH-001,Analyst opened brute force SSH investigation
+NG-0022,2026-05-18 09:21:00,case_event,185.220.101.42,192.168.1.15,TCP,22,0,0,86,critical,Firewall rule applied,contained,incident-console,CASE-SSH-001,Source IP blocked for 24 hours
+NG-0023,2026-05-18 09:22:00,case_event,192.168.1.44,45.33.32.156,TCP,4444,0,0,91,critical,Endpoint isolated,contained,incident-console,CASE-C2-003,Host isolated from network for malware triage
+NG-0024,2026-05-18 09:23:00,traffic,192.168.1.29,104.16.132.229,HTTPS,443,640,96000,16,low,Normal API request,allowed,netguard-sensor-01,,Application API traffic
+NG-0025,2026-05-18 09:24:00,summary,0.0.0.0,0.0.0.0,MIXED,0,67342,9347092,52,medium,Monitoring summary,active,netguard-dashboard,,Sample CSV database for dashboard demonstration
