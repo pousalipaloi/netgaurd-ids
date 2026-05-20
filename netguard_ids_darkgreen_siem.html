@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NetGuard IDS Platform</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#061a0f;
+  --bg2:#0a2414;
+  --bg3:#0d2e19;
+  --bg4:#112e1c;
+  --border:#1a4a28;
+  --border2:#1f5c30;
+  --g50:#9FE1CB;
+  --g100:#5DCAA5;
+  --g200:#1D9E75;
+  --g300:#0F6E56;
+  --g400:#085041;
+  --text:#c8f0dc;
+  --text2:#7abf99;
+  --text3:#4a8a68;
+  --danger:#ff4d4d;
+  --danger-bg:#2d0a0a;
+  --warn:#f0a500;
+  --warn-bg:#2d1a00;
+  --info:#4db8ff;
+  --info-bg:#00182d;
+  --acc:#00ff88;
+  --acc-dim:#00cc6a;
+  --acc-bg:#001a0d;
+  --red-t:#ff6b6b;
+  --amber-t:#ffc266;
+  --font:'Courier New',monospace;
+}
+body{font-family:var(--font);font-size:12px;background:var(--bg);color:var(--text);}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.app{display:flex;min-height:780px;background:var(--bg);}
+
+.sidebar{width:190px;background:var(--bg2);border-right:1px solid var(--border);padding:0;flex-shrink:0;display:flex;flex-direction:column;}
+.brand{padding:14px 14px 12px;border-bottom:1px solid var(--border);}
+.brand-name{font-size:13px;font-weight:500;color:var(--acc);letter-spacing:.06em;}
+.brand-sub{font-size:10px;color:var(--text3);margin-top:2px;}
+.nav-sec{font-size:9px;color:var(--text3);letter-spacing:.1em;padding:10px 14px 3px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:7px;padding:7px 14px;cursor:pointer;font-size:11px;color:var(--text2);border-left:2px solid transparent;transition:all .12s;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{color:var(--acc);background:var(--acc-bg);border-left-color:var(--acc);}
+.nav-item i{font-size:14px;width:16px;}
+.nbadge{margin-left:auto;font-size:9px;background:var(--danger-bg);color:var(--danger);padding:1px 5px;border-radius:8px;border:1px solid var(--danger);}
+.siem-badge{margin-left:auto;font-size:9px;background:var(--info-bg);color:var(--info);padding:1px 5px;border-radius:8px;border:1px solid var(--info);}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);}
+.topbar{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--bg2);}
+.page-title{font-size:13px;font-weight:500;color:var(--acc);}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--acc);background:var(--acc-bg);padding:3px 8px;border-radius:20px;border:1px solid var(--border2);}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--acc);animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.2}}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.content{flex:1;padding:14px;overflow-y:auto;}
+.page{display:none;}.page.active{display:block;}
+
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:14px;}
+.metric{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+.metric-label{font-size:9px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px;}
+.metric-value{font-size:20px;font-weight:500;}
+.metric-sub{font-size:10px;color:var(--text3);margin-top:1px;}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px;}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px;}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;}
+.card-title{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:5px;}
+.card-title i{font-size:13px;}
+
+.alert-row{display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:6px;border:1px solid var(--border);margin-bottom:5px;font-size:11px;animation:fadeIn .25s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.alert-row.critical{background:var(--danger-bg);border-color:var(--danger);}
+.alert-row.high{background:var(--warn-bg);border-color:#6b4000;}
+.alert-row.medium{background:var(--info-bg);border-color:#003d6b;}
+.alert-row.low{background:var(--acc-bg);border-color:var(--border2);}
+.sev{font-size:9px;padding:1px 6px;border-radius:8px;font-weight:500;flex-shrink:0;}
+.sev.critical{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);}
+.sev.high{background:var(--warn-bg);color:var(--warn);border:1px solid #6b4000;}
+.sev.medium{background:var(--info-bg);color:var(--info);border:1px solid #003d6b;}
+.sev.low{background:var(--acc-bg);color:var(--acc);border:1px solid var(--border2);}
+
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{text-align:left;padding:5px 8px;font-size:9px;font-weight:500;color:var(--text3);letter-spacing:.05em;text-transform:uppercase;border-bottom:1px solid var(--border);}
+td{padding:5px 8px;border-bottom:1px solid var(--border);color:var(--text);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--bg3);}
+.tag{display:inline-block;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:500;}
+.tag.green{background:var(--acc-bg);color:var(--acc);border:1px solid var(--border2);}
+.tag.red{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger);}
+.tag.amber{background:var(--warn-bg);color:var(--warn);border:1px solid #6b4000;}
+.tag.blue{background:var(--info-bg);color:var(--info);border:1px solid #003d6b;}
+.tag.gray{background:var(--bg3);color:var(--text2);border:1px solid var(--border);}
+
+.ai-box{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:12px;font-size:11px;line-height:1.7;color:var(--text);min-height:50px;white-space:pre-wrap;font-family:var(--font);}
+.ai-think{display:flex;align-items:center;gap:7px;color:var(--text3);font-size:11px;}
+.dots span{animation:dot 1.2s infinite;display:inline-block;}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+.spark-wrap{position:relative;height:80px;}
+.proto-row{display:flex;align-items:center;gap:6px;margin-bottom:5px;font-size:10px;}
+.bar-bg{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s;}
+.pname{width:42px;color:var(--text3);}
+.ppct{width:28px;text-align:right;color:var(--text3);}
+
+input[type=text],input[type=number],select,textarea{font-size:11px;font-family:var(--font);padding:6px 9px;border:1px solid var(--border2);border-radius:6px;background:var(--bg3);color:var(--text);outline:none;transition:border .15s;}
+input[type=text]:focus,input[type=number]:focus,select:focus,textarea:focus{border-color:var(--acc);}
+select option{background:var(--bg3);color:var(--text);}
+button{font-size:11px;font-family:var(--font);padding:5px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--bg3);color:var(--text2);cursor:pointer;transition:all .12s;}
+button:hover{background:var(--bg4);color:var(--acc);border-color:var(--acc);}
+button.primary{background:var(--acc-bg);color:var(--acc);border-color:var(--acc);}
+button.danger-btn{background:var(--danger-bg);color:var(--danger);border-color:var(--danger);}
+
+.section-label{font-size:9px;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;}
+.input-row{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+.input-row label{font-size:10px;color:var(--text3);width:100px;flex-shrink:0;}
+
+.ip-chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;color:var(--g50);margin:3px;}
+.ip-chip.capturing{border-color:var(--acc);color:var(--acc);}
+.ip-chip.error{border-color:var(--danger);color:var(--danger);}
+.ip-remove{cursor:pointer;color:var(--text3);font-size:11px;}
+.ip-remove:hover{color:var(--danger);}
+
+.siem-status{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);margin-bottom:8px;}
+.siem-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.siem-dot.connected{background:var(--acc);animation:pulse 1.4s infinite;}
+.siem-dot.disconnected{background:var(--text3);}
+.siem-dot.error{background:var(--danger);}
+.siem-dot.connecting{background:var(--warn);animation:pulse .7s infinite;}
+.siem-name{font-size:12px;font-weight:500;color:var(--text);}
+.siem-detail{font-size:10px;color:var(--text3);}
+.siem-actions{margin-left:auto;display:flex;gap:5px;}
+
+.log-line{font-size:10px;font-family:var(--font);padding:3px 0;border-bottom:1px solid var(--border);color:var(--text2);}
+.log-line .ts{color:var(--text3);}
+.log-line .evt-acc{color:var(--acc);}
+.log-line .evt-warn{color:var(--warn);}
+.log-line .evt-danger{color:var(--danger);}
+.log-line .evt-info{color:var(--info);}
+
+.hp-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:7px;}
+.hp-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.hp-st{width:7px;height:7px;border-radius:50%;}
+.hp-st.active{background:var(--acc);animation:pulse 1.4s infinite;}
+.hp-st.alert{background:var(--danger);animation:pulse .7s infinite;}
+.hp-name{font-size:12px;font-weight:500;color:var(--text);}
+.hp-type{font-size:9px;color:var(--text3);margin-left:auto;}
+.hp-mets{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+.hp-m{text-align:center;}
+.hp-mv{font-size:15px;font-weight:500;color:var(--acc);}
+.hp-ml{font-size:9px;color:var(--text3);}
+
+.case-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
+.tl{border-left:2px solid var(--border2);padding-left:12px;margin-top:8px;}
+.t-step{margin-bottom:8px;position:relative;}
+.t-step::before{content:'';position:absolute;left:-17px;top:4px;width:7px;height:7px;border-radius:50%;background:var(--border2);border:2px solid var(--bg2);}
+.t-step.done::before{background:var(--acc);}
+.t-step.warn::before{background:var(--danger);}
+.t-time{font-size:9px;color:var(--text3);}
+.t-text{font-size:11px;color:var(--text);}
+
+.mitig-row{display:flex;gap:9px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border);}
+.mitig-row:last-child{border-bottom:none;}
+.mitig-ico{width:30px;height:30px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mitig-ico i{font-size:15px;}
+.mitig-title{font-size:12px;font-weight:500;color:var(--text);}
+.mitig-desc{font-size:10px;color:var(--text3);line-height:1.5;margin-top:2px;}
+
+.arch-layer{border:1px solid var(--border);border-radius:6px;padding:9px 12px;margin-bottom:7px;background:var(--bg2);}
+.arch-lt{font-size:9px;font-weight:500;color:var(--text3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:7px;}
+.arch-mods{display:flex;gap:5px;flex-wrap:wrap;}
+.arch-mod{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:3px 8px;font-size:10px;color:var(--text2);}
+.arch-mod.hl{background:var(--acc-bg);color:var(--acc);border-color:var(--border2);}
+.arch-arr{text-align:center;color:var(--text3);font-size:12px;margin:2px 0;}
+.schema-field{display:flex;align-items:center;gap:7px;padding:4px 10px;border-bottom:1px solid var(--border);font-size:10px;}
+.schema-field:last-child{border-bottom:none;}
+.fn{color:var(--text);font-weight:500;width:120px;}
+.ft{color:var(--info);width:85px;}
+.fd{color:var(--text3);}
+.pk2{font-size:8px;background:var(--acc-bg);color:var(--acc);padding:1px 4px;border-radius:3px;}
+.fk2{font-size:8px;background:var(--info-bg);color:var(--info);padding:1px 4px;border-radius:3px;}
+</style>
+</head>
+<body>
+
+<h2 class="sr-only">NetGuard IDS platform — dark green theme with IP packet capture, SIEM integration, live traffic, honeypots, mitigations, and case studies.</h2>
+
+<div class="app">
+<div class="sidebar">
+  <div class="brand">
+    <div class="brand-name"><i class="ti ti-shield-lock" aria-hidden="true"></i> NetGuard IDS</div>
+    <div class="brand-sub">v3.0 · Dark Ops Edition</div>
+  </div>
+  <div class="nav-sec">Monitor</div>
+  <div class="nav-item active" onclick="nav('dashboard')"><i class="ti ti-layout-dashboard" aria-hidden="true"></i>Dashboard</div>
+  <div class="nav-item" onclick="nav('capture')"><i class="ti ti-radar" aria-hidden="true"></i>Packet Capture</div>
+  <div class="nav-item" onclick="nav('alerts')"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Alerts <span class="nbadge" id="nb">0</span></div>
+  <div class="nav-item" onclick="nav('connections')"><i class="ti ti-network" aria-hidden="true"></i>Connections</div>
+  <div class="nav-sec">Defence</div>
+  <div class="nav-item" onclick="nav('honeypots')"><i class="ti ti-bug" aria-hidden="true"></i>Honeypots</div>
+  <div class="nav-item" onclick="nav('mitigations')"><i class="ti ti-shield-check" aria-hidden="true"></i>Mitigations</div>
+  <div class="nav-sec">Integrations</div>
+  <div class="nav-item" onclick="nav('siem')"><i class="ti ti-plug" aria-hidden="true"></i>SIEM Connector <span class="siem-badge" id="siem-nav-badge">OFF</span></div>
+  <div class="nav-sec">Forensics</div>
+  <div class="nav-item" onclick="nav('database')"><i class="ti ti-database" aria-hidden="true"></i>Database</div>
+  <div class="nav-item" onclick="nav('casestudy')"><i class="ti ti-book" aria-hidden="true"></i>Case Studies</div>
+  <div class="nav-item" onclick="nav('ai')"><i class="ti ti-brain" aria-hidden="true"></i>AI Analyst</div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <span class="page-title" id="ptitle">Dashboard</span>
+    <div class="live-pill"><div class="dot"></div>Live</div>
+    <div class="tb-right">
+      <span style="font-size:10px;color:var(--text3);">Interface:</span>
+      <select id="ifaceSelect" style="width:140px;">
+        <option>eth0 — 192.168.1.0/24</option>
+        <option>wlan0 — 10.0.0.0/24</option>
+        <option>tap0 — honeypot-net</option>
+      </select>
+      <span id="siem-topbar" style="font-size:10px;color:var(--text3);display:flex;align-items:center;gap:5px;"><span id="siem-top-dot" style="width:7px;height:7px;border-radius:50%;background:var(--text3);display:inline-block;"></span><span id="siem-top-label">SIEM: OFF</span></span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <div class="page active" id="page-dashboard">
+      <div class="metrics">
+        <div class="metric"><div class="metric-label">Packets/sec</div><div class="metric-value" id="m-pps" style="color:var(--acc)">0</div><div class="metric-sub" id="m-bps">0 MB/s</div></div>
+        <div class="metric"><div class="metric-label">Threats</div><div class="metric-value" id="m-thr" style="color:var(--red-t)">0</div><div class="metric-sub" id="m-blk">0 blocked</div></div>
+        <div class="metric"><div class="metric-label">Honeypot hits</div><div class="metric-value" id="m-hp" style="color:var(--amber-t)">0</div><div class="metric-sub">across 4 traps</div></div>
+        <div class="metric"><div class="metric-label">Threat level</div><div class="metric-value" id="m-lvl" style="color:var(--acc)">LOW</div><div class="metric-sub" id="m-lvl-sub">Normal ops</div></div>
+      </div>
+      <div class="metrics" style="margin-bottom:10px;">
+        <div class="metric"><div class="metric-label">Captured IPs</div><div class="metric-value" id="m-ips" style="color:var(--info)">0</div><div class="metric-sub">targets monitored</div></div>
+        <div class="metric"><div class="metric-label">SIEM events sent</div><div class="metric-value" id="m-siem" style="color:var(--text2)">0</div><div class="metric-sub" id="m-siem-sub">not connected</div></div>
+        <div class="metric"><div class="metric-label">Total packets</div><div class="metric-value" id="m-pkts" style="color:var(--text)">0</div><div class="metric-sub">this session</div></div>
+        <div class="metric"><div class="metric-label">Uptime</div><div class="metric-value" id="m-uptime" style="color:var(--text)">00:00</div><div class="metric-sub">engine running</div></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><div class="card-title"><i class="ti ti-activity" aria-hidden="true"></i>Traffic (30s)</div><div class="spark-wrap"><canvas id="spark" role="img" aria-label="Live traffic sparkline over 30 seconds"></canvas></div></div>
+        <div class="card"><div class="card-title"><i class="ti ti-layers-difference" aria-hidden="true"></i>Protocol mix</div><div id="protoList"></div></div>
+      </div>
+      <div class="card"><div class="card-title"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Recent alerts</div><div id="recentAlerts"></div></div>
+    </div>
+
+    <div class="page" id="page-capture">
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title"><i class="ti ti-radar" aria-hidden="true"></i>Packet capture targets — add IP addresses to monitor</div>
+        <div class="input-row">
+          <label>Target IP / CIDR</label>
+          <input type="text" id="ip-input" placeholder="e.g. 192.168.1.50 or 10.0.0.0/24" style="width:220px;">
+          <select id="ip-proto" style="width:100px;">
+            <option value="ALL">All proto</option>
+            <option value="TCP">TCP only</option>
+            <option value="UDP">UDP only</option>
+            <option value="ICMP">ICMP only</option>
+          </select>
+          <select id="ip-port" style="width:100px;">
+            <option value="0">All ports</option>
+            <option value="22">Port 22 SSH</option>
+            <option value="80">Port 80 HTTP</option>
+            <option value="443">Port 443 HTTPS</option>
+            <option value="3306">Port 3306 DB</option>
+            <option value="custom">Custom…</option>
+          </select>
+          <input type="number" id="ip-custom-port" placeholder="port" style="width:70px;display:none;">
+          <button class="primary" onclick="addCaptureIP()"><i class="ti ti-plus" aria-hidden="true"></i> Add target</button>
+        </div>
+        <div style="margin-bottom:8px;">
+          <div class="section-label">Bulk add (one IP per line)</div>
+          <textarea id="bulk-ip" rows="3" style="width:100%;font-size:10px;resize:vertical;" placeholder="10.0.0.1&#10;192.168.1.0/24&#10;172.16.5.22"></textarea>
+          <button onclick="bulkAdd()" style="margin-top:5px;"><i class="ti ti-upload" aria-hidden="true"></i> Import list</button>
+        </div>
+        <div class="section-label">Active capture targets (<span id="ip-count">0</span>)</div>
+        <div id="ip-chips" style="min-height:36px;"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title"><i class="ti ti-filter" aria-hidden="true"></i>Capture filters (BPF-style)</div>
+        <div class="input-row"><label>BPF filter string</label><input type="text" id="bpf-input" placeholder="tcp port 22 and src host 10.0.0.0/8" style="flex:1;"></div>
+        <div class="input-row"><label>Packet snap length</label><input type="number" id="snaplen" value="65535" style="width:80px;"> <span style="font-size:10px;color:var(--text3);">bytes (max MTU)</span></div>
+        <div class="input-row"><label>Capture mode</label>
+          <select id="cap-mode">
+            <option>Promiscuous</option>
+            <option>Normal</option>
+            <option>Monitor (802.11)</option>
+          </select>
+        </div>
+        <button class="primary" onclick="startCapture()"><i class="ti ti-player-play" aria-hidden="true"></i> Start capture</button>
+        <button onclick="stopCapture()" style="margin-left:6px;" id="stop-btn" disabled><i class="ti ti-player-stop" aria-hidden="true"></i> Stop</button>
+        <button onclick="exportPCAP()" style="margin-left:6px;"><i class="ti ti-download" aria-hidden="true"></i> Export PCAP</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="ti ti-terminal" aria-hidden="true"></i>Live packet log — <span id="pkt-count">0</span> packets captured</div>
+        <div id="pkt-log" style="max-height:280px;overflow-y:auto;font-family:var(--font);"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-alerts">
+      <div style="display:flex;gap:7px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+        <select id="sevFilter" onchange="renderAlertPage()" style="width:130px;">
+          <option value="all">All severities</option>
+          <option value="critical">Critical</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <input type="text" id="ipFilter" placeholder="Filter by IP…" oninput="renderAlertPage()" style="width:160px;">
+        <button onclick="DB.alerts=[];renderAlertPage();updateMetrics();" class="danger-btn" style="margin-left:auto;"><i class="ti ti-trash" aria-hidden="true"></i> Clear</button>
+      </div>
+      <div id="alertPage"></div>
+    </div>
+
+    <div class="page" id="page-connections">
+      <div style="margin-bottom:10px;"><button onclick="genConnections()"><i class="ti ti-refresh" aria-hidden="true"></i> Refresh</button></div>
+      <div class="card"><table><thead><tr><th>Src IP</th><th>Dst IP</th><th>Port</th><th>Proto</th><th>Pkts</th><th>Bytes</th><th>Status</th></tr></thead><tbody id="connBody"></tbody></table></div>
+    </div>
+
+    <div class="page" id="page-honeypots">
+      <div class="grid2" style="margin-bottom:10px;">
+        <div class="metric"><div class="metric-label">Active traps</div><div class="metric-value" style="color:var(--acc)">4</div><div class="metric-sub">SSH · HTTP · DB · FTP</div></div>
+        <div class="metric"><div class="metric-label">Total interactions</div><div class="metric-value" id="hp-total" style="color:var(--amber-t)">0</div><div class="metric-sub">unique attacker IPs</div></div>
+      </div>
+      <div id="honeypotList"></div>
+      <div class="card" style="margin-top:10px;">
+        <div class="card-title"><i class="ti ti-clock-record" aria-hidden="true"></i>Interaction log</div>
+        <div id="hpLog" style="max-height:200px;overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-mitigations">
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title"><i class="ti ti-brain" aria-hidden="true"></i>AI mitigation plan</div>
+        <div class="ai-box" id="mitig-ai">Click "Generate" for AI-tailored mitigations based on active threats.</div>
+        <div style="margin-top:8px;display:flex;gap:6px;">
+          <button class="primary" onclick="genMitigPlan()"><i class="ti ti-brain" aria-hidden="true"></i> Generate plan ↗</button>
+          <button onclick="sendPrompt('Give me the full iptables and Snort/Suricata config to block the detected threats.')">Config scripts ↗</button>
+        </div>
+      </div>
+      <div class="card"><div class="card-title"><i class="ti ti-shield-check" aria-hidden="true"></i>Standard playbook</div><div id="mitigList"></div></div>
+    </div>
+
+    <div class="page" id="page-siem">
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title"><i class="ti ti-plug" aria-hidden="true"></i>SIEM connector configuration</div>
+        <div class="input-row"><label>SIEM platform</label>
+          <select id="siem-platform" style="width:180px;" onchange="siemPlatformChange()">
+            <option value="splunk">Splunk</option>
+            <option value="elastic">Elastic SIEM</option>
+            <option value="qradar">IBM QRadar</option>
+            <option value="sentinel">Microsoft Sentinel</option>
+            <option value="arcsight">ArcSight</option>
+            <option value="custom">Custom / Syslog</option>
+          </select>
+        </div>
+        <div class="input-row"><label>Host / endpoint</label><input type="text" id="siem-host" placeholder="siem.corp.local or 10.0.0.50" style="flex:1;"></div>
+        <div class="input-row"><label>Port</label><input type="number" id="siem-port" value="8089" style="width:80px;"> <span style="font-size:10px;color:var(--text3);" id="siem-port-hint">HEC default: 8088 · REST: 8089</span></div>
+        <div class="input-row"><label>Auth token / key</label><input type="text" id="siem-token" placeholder="Bearer token or API key" style="flex:1;"></div>
+        <div class="input-row"><label>Index / source</label><input type="text" id="siem-index" placeholder="netguard_ids" style="flex:1;"></div>
+        <div class="input-row"><label>Forward mode</label>
+          <select id="siem-mode">
+            <option value="realtime">Real-time (all events)</option>
+            <option value="threshold">Threshold (critical+high only)</option>
+            <option value="batch">Batch (every 60s)</option>
+          </select>
+        </div>
+        <div class="input-row"><label>Protocol</label>
+          <select id="siem-proto">
+            <option value="https">HTTPS</option>
+            <option value="http">HTTP</option>
+            <option value="syslog-tcp">Syslog TCP</option>
+            <option value="syslog-udp">Syslog UDP</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:4px;">
+          <button class="primary" onclick="connectSIEM()"><i class="ti ti-plug" aria-hidden="true"></i> Connect</button>
+          <button onclick="testSIEM()"><i class="ti ti-send" aria-hidden="true"></i> Send test event</button>
+          <button onclick="disconnectSIEM()" class="danger-btn" id="disconnect-btn" disabled><i class="ti ti-plug-x" aria-hidden="true"></i> Disconnect</button>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title"><i class="ti ti-signal" aria-hidden="true"></i>Connection status</div>
+        <div id="siemStatusList"></div>
+      </div>
+
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i>SIEM event statistics</div>
+        <div class="grid3">
+          <div class="metric"><div class="metric-label">Events sent</div><div class="metric-value" id="siem-sent" style="color:var(--acc)">0</div></div>
+          <div class="metric"><div class="metric-label">Events/min</div><div class="metric-value" id="siem-rate" style="color:var(--text)">0</div></div>
+          <div class="metric"><div class="metric-label">Failed sends</div><div class="metric-value" id="siem-fail" style="color:var(--red-t)">0</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i class="ti ti-terminal" aria-hidden="true"></i>SIEM event log (CEF/JSON output)</div>
+        <div id="siemLog" style="max-height:240px;overflow-y:auto;font-family:var(--font);font-size:10px;"></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-database">
+      <div class="grid3" style="margin-bottom:10px;">
+        <div class="metric"><div class="metric-label">Alerts stored</div><div class="metric-value" id="db-alerts" style="color:var(--text)">0</div></div>
+        <div class="metric"><div class="metric-label">Connections</div><div class="metric-value" id="db-conns" style="color:var(--text)">0</div></div>
+        <div class="metric"><div class="metric-label">Honeypot events</div><div class="metric-value" id="db-hp" style="color:var(--text)">0</div></div>
+      </div>
+      <div class="card" style="margin-bottom:10px;"><div class="card-title"><i class="ti ti-table" aria-hidden="true"></i>Schema — alerts</div><div id="schema-alerts"></div></div>
+      <div class="card" style="margin-bottom:10px;"><div class="card-title"><i class="ti ti-table" aria-hidden="true"></i>Schema — connections</div><div id="schema-conn"></div></div>
+      <div class="card"><div class="card-title"><i class="ti ti-table" aria-hidden="true"></i>Schema — honeypot_events</div><div id="schema-hp"></div></div>
+    </div>
+
+    <div class="page" id="page-casestudy">
+      <div id="caseList"></div>
+    </div>
+
+    <div class="page" id="page-ai">
+      <div class="card" style="margin-bottom:10px;">
+        <div class="card-title"><i class="ti ti-brain" aria-hidden="true"></i>AI threat analyst</div>
+        <div class="ai-box" id="ai-main">Click "Analyse" to get a full AI assessment of network state, threats, and honeypot intelligence.</div>
+        <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="primary" onclick="aiAnalyse()"><i class="ti ti-brain" aria-hidden="true"></i> Analyse ↗</button>
+          <button onclick="sendPrompt('Map the current IDS threats to MITRE ATT&CK techniques and give me the full kill chain.')">MITRE ATT&CK ↗</button>
+          <button onclick="sendPrompt('Write a complete incident response playbook for the top detected threats.')">IR playbook ↗</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-list" aria-hidden="true"></i>Event JSON feed (SIEM-ready)</div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:9px;font-size:10px;font-family:var(--font);max-height:200px;overflow-y:auto;color:var(--text);" id="jsonFeed"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+function sendPrompt(promptText){
+  const target=document.getElementById('ai-main')||document.getElementById('mitig-ai');
+  if(target){
+    target.textContent='Prompt request:\n'+promptText+'\n\nThis standalone HTML export cannot send prompts back to the original chat. Use this text in your AI/SOC workflow.';
+  }
+  if(typeof addSysLog==='function') addSysLog('Prompt prepared: '+promptText.slice(0,72),'info');
+}
+
+const PAGES={dashboard:'Dashboard',capture:'Packet Capture',alerts:'Alerts',connections:'Connections',honeypots:'Honeypots',mitigations:'Mitigations',siem:'SIEM Connector',database:'Database Schema',casestudy:'Case Studies',ai:'AI Analyst'};
+
+const DB={alerts:[],connections:[],hp_events:[],packets:[],totalPkts:0,blocked:0,hpHits:0,siemSent:0,siemFail:0,siemRate:0};
+const SIEM_STATE={connected:false,platform:'',host:'',port:'',token:'',index:'',mode:'realtime',events:[],eventsPerMin:0,lastMin:0};
+const CAPTURE={active:false,targets:[],packets:0};
+
+const THREATS=[
+  {name:'Port Scan',sev:'high',icon:'ti-scan',sig:'SYN_SCAN_001'},
+  {name:'SQL Injection',sev:'critical',icon:'ti-code',sig:'SQLI_HTTP_007'},
+  {name:'Brute Force SSH',sev:'high',icon:'ti-lock-open',sig:'BF_SSH_003'},
+  {name:'DNS Tunneling',sev:'medium',icon:'ti-topology-star-3',sig:'DNS_EXFIL_012'},
+  {name:'DDoS Flood',sev:'critical',icon:'ti-wave-saw-tool',sig:'DDOS_UDP_005'},
+  {name:'ARP Spoofing',sev:'high',icon:'ti-router',sig:'ARP_SPOOF_009'},
+  {name:'Malware C2',sev:'critical',icon:'ti-bug',sig:'C2_BEACON_021'},
+  {name:'Lateral Movement',sev:'high',icon:'ti-arrows-horizontal',sig:'LAT_MOV_018'},
+  {name:'Data Exfil',sev:'critical',icon:'ti-cloud-upload',sig:'EXFIL_031'},
+  {name:'Recon Probe',sev:'low',icon:'ti-eye',sig:'RECON_002'},
+  {name:'Crypto Miner',sev:'medium',icon:'ti-cpu',sig:'MINER_044'},
+  {name:'ICMP Flood',sev:'medium',icon:'ti-wave-sine',sig:'ICMP_004'},
+];
+const IPS=['192.168.1.104','10.0.0.55','172.16.0.23','203.0.113.47','198.51.100.88','45.33.32.156','185.220.101.33','45.142.212.100'];
+const DSTS=['192.168.1.1','8.8.8.8','10.0.0.1','172.16.0.1'];
+const PORTS=[80,443,22,53,3306,8080,4444,445,21,3389];
+const PROTOS_LIST=[{name:'HTTP',color:'#378ADD',base:35},{name:'HTTPS',color:'#1D9E75',base:40},{name:'DNS',color:'#EF9F27',base:12},{name:'SSH',color:'#ff6b6b',base:5},{name:'Other',color:'#4a8a68',base:8}];
+const HONEYPOTS=[
+  {id:'hp-ssh-01',name:'SSH Honeypot Alpha',type:'Low-interaction SSH',ip:'10.0.0.200',port:22,hits:0,creds:[]},
+  {id:'hp-ssh-02',name:'SSH Honeypot Beta',type:'High-interaction SSH',ip:'10.0.0.201',port:22,hits:0,creds:[]},
+  {id:'hp-http-01',name:'Fake Admin Panel',type:'HTTP web trap',ip:'10.0.0.202',port:80,hits:0,creds:[]},
+  {id:'hp-db-01',name:'MySQL Decoy DB',type:'Database honeypot',ip:'10.0.0.203',port:3306,hits:0,creds:[]},
+];
+const SIEM_DEFAULTS={splunk:{port:8088,proto:'https',hint:'HEC port 8088, REST 8089'},elastic:{port:9200,proto:'https',hint:'Elasticsearch HTTP port 9200'},qradar:{port:514,proto:'syslog-tcp',hint:'Syslog TCP port 514'},sentinel:{port:443,proto:'https',hint:'Log Analytics workspace API'},arcsight:{port:515,proto:'syslog-tcp',hint:'SmartConnector syslog TCP'},custom:{port:514,proto:'syslog-udp',hint:'Standard syslog UDP 514'}};
+
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function uid(){return Math.random().toString(36).slice(2,10);}
+function ts(){return new Date().toTimeString().split(' ')[0];}
+function isValidIP(s){s=s.trim();const ipRx=/^(\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?$/;return ipRx.test(s);}
+
+function nav(id){
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  const ni=document.querySelector(`[onclick="nav('${id}')"]`);if(ni)ni.classList.add('active');
+  const pg=document.getElementById('page-'+id);if(pg)pg.classList.add('active');
+  document.getElementById('ptitle').textContent=PAGES[id]||id;
+  if(id==='database')renderDB();
+  if(id==='alerts')renderAlertPage();
+  if(id==='connections')genConnections();
+  if(id==='honeypots')renderHoneypots();
+  if(id==='casestudy')renderCases();
+  if(id==='mitigations')renderMitigList();
+  if(id==='ai'){renderJSONFeed();}
+  if(id==='siem')renderSIEMStatus();
+}
+
+let sparkData=new Array(30).fill(0),sparkChart;
+function initSpark(){
+  const ctx=document.getElementById('spark').getContext('2d');
+  sparkChart=new Chart(ctx,{type:'line',data:{labels:sparkData.map((_,i)=>i),datasets:[{data:sparkData,borderColor:'#00ff88',borderWidth:1.5,pointRadius:0,fill:true,backgroundColor:'rgba(0,255,136,0.07)',tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}}}});
+}
+
+let protoVals=[35,40,12,5,8];
+function renderProtos(){
+  let vals=PROTOS_LIST.map((p,i)=>Math.max(1,protoVals[i]+rnd(-4,4)));
+  const tot=vals.reduce((a,b)=>a+b,0);
+  vals=vals.map(v=>Math.round(v/tot*100));
+  protoVals=vals;
+  document.getElementById('protoList').innerHTML=PROTOS_LIST.map((p,i)=>`<div class="proto-row"><span class="pname">${p.name}</span><div class="bar-bg"><div class="bar-fill" style="width:${vals[i]}%;background:${p.color}"></div></div><span class="ppct">${vals[i]}%</span></div>`).join('');
+}
+
+function addAlert(){
+  const t=pick(THREATS),src=pick(IPS),dst=pick(DSTS),port=pick(PORTS);
+  const a={id:uid(),timestamp:new Date().toISOString(),threat_type:t.name,sev:t.sev,src_ip:src,dst_ip:dst,dst_port:port,protocol:pick(['TCP','UDP','ICMP']),sig:t.sig,icon:t.icon,mitigated:t.sev==='critical'||t.sev==='high'};
+  DB.alerts.unshift(a);if(DB.alerts.length>200)DB.alerts.pop();
+  if(a.mitigated)DB.blocked++;
+  document.getElementById('nb').textContent=DB.alerts.length;
+  if(SIEM_STATE.connected){const mode=SIEM_STATE.mode;if(mode==='realtime'||(mode==='threshold'&&(a.sev==='critical'||a.sev==='high'))){sendToSIEM(a);}}
+  renderRecentAlerts();updateMetrics();
+  if(document.getElementById('page-alerts').classList.contains('active'))renderAlertPage();
+}
+
+function renderRecentAlerts(){
+  const el=document.getElementById('recentAlerts');if(!el)return;
+  el.innerHTML=DB.alerts.slice(0,5).map(a=>`<div class="alert-row ${a.sev}"><i class="ti ${a.icon}" style="font-size:13px;flex-shrink:0" aria-hidden="true"></i><span class="sev ${a.sev}">${a.sev.toUpperCase()}</span><span style="flex:1">${a.threat_type}</span><span style="color:var(--text3)">${a.src_ip}</span><span style="color:var(--text3);margin-left:8px;">${a.timestamp.slice(11,19)}</span></div>`).join('');
+}
+
+function renderAlertPage(){
+  const sev=document.getElementById('sevFilter')?.value||'all';
+  const ip=document.getElementById('ipFilter')?.value||'';
+  const filtered=DB.alerts.filter(a=>{if(sev!=='all'&&a.sev!==sev)return false;if(ip&&!a.src_ip.includes(ip)&&!a.dst_ip.includes(ip))return false;return true;});
+  const el=document.getElementById('alertPage');if(!el)return;
+  if(!filtered.length){el.innerHTML='<div style="color:var(--text3);padding:10px;">No alerts match filter.</div>';return;}
+  el.innerHTML=filtered.slice(0,50).map(a=>`<div class="alert-row ${a.sev}"><i class="ti ${a.icon}" style="font-size:13px;flex-shrink:0" aria-hidden="true"></i><span class="sev ${a.sev}">${a.sev.toUpperCase()}</span><div style="flex:1;min-width:0;"><div style="font-weight:500">${a.threat_type}</div><div style="font-size:10px;color:var(--text3)">${a.src_ip} → ${a.dst_ip}:${a.dst_port} · ${a.protocol} · ${a.sig}</div></div><span class="tag ${a.mitigated?'green':'amber'}">${a.mitigated?'Blocked':'Watch'}</span><span style="color:var(--text3);margin-left:7px;font-size:10px;">${a.timestamp.slice(11,19)}</span></div>`).join('');
+}
+
+function genConnections(){
+  while(DB.connections.length<12)DB.connections.push({id:uid(),src_ip:pick(IPS),dst_ip:pick(DSTS),dst_port:pick(PORTS),protocol:pick(['TCP','UDP','TLS']),packets:rnd(10,5000),bytes:rnd(1024,1048576),sus:Math.random()<0.2});
+  const body=document.getElementById('connBody');if(!body)return;
+  body.innerHTML=DB.connections.slice(0,12).map(c=>{const kb=c.bytes>1048576?(c.bytes/1048576).toFixed(1)+'MB':(c.bytes/1024).toFixed(0)+'KB';return `<tr><td>${c.src_ip}</td><td>${c.dst_ip}</td><td>${c.dst_port}</td><td>${c.protocol}</td><td>${c.packets.toLocaleString()}</td><td>${kb}</td><td><span class="tag ${c.sus?'red':'green'}">${c.sus?'Suspect':'Clean'}</span></td></tr>`;}).join('');
+}
+
+function renderHoneypots(){
+  const el=document.getElementById('honeypotList');if(!el)return;
+  el.innerHTML=HONEYPOTS.map(hp=>`<div class="hp-card"><div class="hp-hdr"><div class="hp-st ${hp.hits>5?'alert':'active'}"></div><span class="hp-name">${hp.name}</span><span class="hp-type">${hp.type} · ${hp.ip}:${hp.port}</span></div><div class="hp-mets"><div class="hp-m"><div class="hp-mv">${hp.hits}</div><div class="hp-ml">Hits</div></div><div class="hp-m"><div class="hp-mv">${hp.creds.length}</div><div class="hp-ml">Creds</div></div><div class="hp-m"><div class="hp-mv">${rnd(1,8)}</div><div class="hp-ml">Unique IPs</div></div></div></div>`).join('');
+  document.getElementById('hp-total').textContent=DB.hp_events.length;
+}
+
+function addHoneypotEvent(){
+  const hp=pick(HONEYPOTS);hp.hits++;DB.hpHits++;
+  const cred=pick(['admin:admin','root:password','root:toor','admin:123456']);
+  const action=pick(['login_attempt','ssh_scan','payload_drop','web_probe','db_query']);
+  const ev={id:uid(),timestamp:new Date().toISOString(),honeypot_id:hp.id,attacker_ip:pick(IPS),action,credential_used:action.includes('login')?cred:'—'};
+  DB.hp_events.unshift(ev);if(DB.hp_events.length>100)DB.hp_events.pop();
+  if(action.includes('login'))hp.creds.push(cred);
+  const logEl=document.getElementById('hpLog');
+  if(logEl)logEl.innerHTML=DB.hp_events.slice(0,20).map(e=>`<div class="log-line"><span class="ts">${e.timestamp.slice(11,19)}</span> <span class="evt-danger">${e.attacker_ip}</span> → <span class="evt-acc">${e.honeypot_id}</span> · <span class="evt-info">${e.action}</span>${e.credential_used!=='—'?' · <span class="evt-warn">'+e.credential_used+'</span>':''}</div>`).join('');
+  if(document.getElementById('page-honeypots').classList.contains('active'))renderHoneypots();
+}
+
+function updateMetrics(){
+  const criticals=DB.alerts.filter(a=>a.sev==='critical').length;
+  const highs=DB.alerts.filter(a=>a.sev==='high').length;
+  document.getElementById('m-thr').textContent=DB.alerts.length;
+  document.getElementById('m-blk').textContent=DB.blocked+' blocked';
+  document.getElementById('m-hp').textContent=DB.hpHits;
+  document.getElementById('m-ips').textContent=CAPTURE.targets.length;
+  document.getElementById('m-siem').textContent=DB.siemSent;
+  document.getElementById('m-siem-sub').textContent=SIEM_STATE.connected?'connected · '+SIEM_STATE.platform:'not connected';
+  document.getElementById('m-pkts').textContent=DB.totalPkts.toLocaleString();
+  const lvl=document.getElementById('m-lvl'),sub=document.getElementById('m-lvl-sub');
+  if(criticals>=3){lvl.textContent='CRITICAL';lvl.style.color='var(--danger)';sub.textContent='Immediate action!';}
+  else if(criticals>=1||highs>=3){lvl.textContent='HIGH';lvl.style.color='var(--danger)';sub.textContent='Active threats';}
+  else if(highs>=1){lvl.textContent='MEDIUM';lvl.style.color='var(--amber-t)';sub.textContent='Elevated risk';}
+  else{lvl.textContent='LOW';lvl.style.color='var(--acc)';sub.textContent='Normal ops';}
+}
+
+function addCaptureIP(){
+  const val=document.getElementById('ip-input').value.trim();
+  if(!val){alert('Enter an IP address or CIDR range.');return;}
+  if(!isValidIP(val)){alert('Invalid IP/CIDR format. Example: 192.168.1.50 or 10.0.0.0/24');return;}
+  if(CAPTURE.targets.find(t=>t.ip===val)){alert('IP already added.');return;}
+  const proto=document.getElementById('ip-proto').value;
+  const portSel=document.getElementById('ip-port').value;
+  const port=portSel==='custom'?document.getElementById('ip-custom-port').value:portSel;
+  CAPTURE.targets.push({ip:val,proto,port,status:'idle',pktCount:0});
+  document.getElementById('ip-input').value='';
+  renderIPChips();updateMetrics();
+  addSysLog(`Target added: ${val} [${proto}:${port||'all'}]`,'acc');
+}
+
+function bulkAdd(){
+  const lines=document.getElementById('bulk-ip').value.trim().split('\n');
+  let added=0;
+  lines.forEach(l=>{
+    const v=l.trim();if(!v)return;
+    if(!isValidIP(v)){addSysLog(`Invalid IP skipped: ${v}`,'warn');return;}
+    if(CAPTURE.targets.find(t=>t.ip===v))return;
+    CAPTURE.targets.push({ip:v,proto:'ALL',port:'0',status:'idle',pktCount:0});added++;
+  });
+  document.getElementById('bulk-ip').value='';
+  renderIPChips();updateMetrics();
+  addSysLog(`Bulk import: ${added} targets added`,'acc');
+}
+
+function removeIP(ip){
+  CAPTURE.targets=CAPTURE.targets.filter(t=>t.ip!==ip);
+  renderIPChips();updateMetrics();
+  addSysLog(`Target removed: ${ip}`,'warn');
+}
+
+function renderIPChips(){
+  const el=document.getElementById('ip-chips');
+  document.getElementById('ip-count').textContent=CAPTURE.targets.length;
+  if(!CAPTURE.targets.length){el.innerHTML='<span style="color:var(--text3);font-size:11px;">No targets added.</span>';return;}
+  el.innerHTML=CAPTURE.targets.map(t=>`<span class="ip-chip ${t.status}"><span style="width:6px;height:6px;border-radius:50%;background:${t.status==='capturing'?'var(--acc)':t.status==='error'?'var(--danger)':'var(--text3)'};display:inline-block;"></span>${t.ip}<span style="font-size:9px;color:var(--text3)">[${t.proto}${t.port&&t.port!='0'?':'+t.port:''}]</span><span class="ip-remove" onclick="removeIP('${t.ip}')" title="Remove">×</span></span>`).join('');
+}
+
+function startCapture(){
+  if(!CAPTURE.targets.length){addSysLog('No targets — add at least one IP first.','warn');return;}
+  CAPTURE.active=true;
+  CAPTURE.targets.forEach(t=>t.status='capturing');
+  renderIPChips();
+  document.getElementById('stop-btn').disabled=false;
+  addSysLog(`Capture started on ${CAPTURE.targets.length} target(s)`,'acc');
+}
+function stopCapture(){
+  CAPTURE.active=false;
+  CAPTURE.targets.forEach(t=>t.status='idle');
+  renderIPChips();
+  document.getElementById('stop-btn').disabled=true;
+  addSysLog('Capture stopped','warn');
+}
+function exportPCAP(){
+  addSysLog(`PCAP export: ${CAPTURE.packets} packets → netguard_${Date.now()}.pcap`,'info');
+  sendPrompt('How do I open and analyse a PCAP file exported from NetGuard IDS? What tools should I use (Wireshark, tcpdump, tshark)?');
+}
+
+let pktLogLines=[];
+function addPacketLog(src,dst,proto,port,bytes,flag){
+  const line=`<div class="log-line"><span class="ts">${ts()}</span> <span class="evt-${flag||'acc'}">${src}</span> → <span class="evt-info">${dst}:${port}</span> <span style="color:var(--text3)">${proto}</span> <span style="color:var(--text2)">${bytes}B</span>${flag==='danger'?' <span class="tag red">ALERT</span>':''}</div>`;
+  pktLogLines.unshift(line);if(pktLogLines.length>150)pktLogLines.pop();
+  const el=document.getElementById('pkt-log');
+  if(el)el.innerHTML=pktLogLines.slice(0,50).join('');
+  CAPTURE.packets++;DB.totalPkts++;
+  document.getElementById('pkt-count').textContent=CAPTURE.packets;
+}
+
+function addSysLog(msg,type){
+  const logEl=document.getElementById('pkt-log');
+  if(!logEl)return;
+  const line=`<div class="log-line"><span class="ts">${ts()}</span> <span class="evt-${type||'acc'}">[SYS] ${msg}</span></div>`;
+  pktLogLines.unshift(line);if(pktLogLines.length>150)pktLogLines.pop();
+  logEl.innerHTML=pktLogLines.slice(0,50).join('');
+}
+
+function siemPlatformChange(){
+  const p=document.getElementById('siem-platform').value;
+  const d=SIEM_DEFAULTS[p]||SIEM_DEFAULTS.custom;
+  document.getElementById('siem-port').value=d.port;
+  document.getElementById('siem-proto').value=d.proto;
+  document.getElementById('siem-port-hint').textContent=d.hint;
+  document.getElementById('siem-index').placeholder=p==='splunk'?'netguard_ids':p==='elastic'?'netguard-ids-*':p==='qradar'?'Log Source ID':p==='sentinel'?'NetGuardIDS_CL':'netguard_ids';
+}
+
+function connectSIEM(){
+  const host=document.getElementById('siem-host').value.trim();
+  if(!host){alert('Enter a SIEM host or endpoint URL.');return;}
+  SIEM_STATE.connecting=true;
+  SIEM_STATE.platform=document.getElementById('siem-platform').value;
+  SIEM_STATE.host=host;
+  SIEM_STATE.port=document.getElementById('siem-port').value;
+  SIEM_STATE.token=document.getElementById('siem-token').value;
+  SIEM_STATE.index=document.getElementById('siem-index').value||'netguard_ids';
+  SIEM_STATE.mode=document.getElementById('siem-mode').value;
+  renderSIEMStatus('connecting');
+  setTimeout(()=>{
+    SIEM_STATE.connected=true;SIEM_STATE.connecting=false;
+    renderSIEMStatus('connected');
+    document.getElementById('disconnect-btn').disabled=false;
+    document.getElementById('siem-nav-badge').textContent='ON';
+    document.getElementById('siem-nav-badge').style.background='var(--acc-bg)';
+    document.getElementById('siem-nav-badge').style.color='var(--acc)';
+    document.getElementById('siem-nav-badge').style.borderColor='var(--acc)';
+    document.getElementById('siem-top-dot').style.background='var(--acc)';
+    document.getElementById('siem-top-label').textContent='SIEM: '+SIEM_STATE.platform.toUpperCase();
+    addSIEMLog(`CONNECTED to ${SIEM_STATE.platform} at ${SIEM_STATE.host}:${SIEM_STATE.port}`,'acc');
+    sendTestEvent();
+  },1200);
+}
+
+function disconnectSIEM(){
+  SIEM_STATE.connected=false;
+  renderSIEMStatus('disconnected');
+  document.getElementById('disconnect-btn').disabled=true;
+  document.getElementById('siem-nav-badge').textContent='OFF';
+  document.getElementById('siem-nav-badge').style.background='var(--info-bg)';
+  document.getElementById('siem-nav-badge').style.color='var(--info)';
+  document.getElementById('siem-nav-badge').style.borderColor='var(--info)';
+  document.getElementById('siem-top-dot').style.background='var(--text3)';
+  document.getElementById('siem-top-label').textContent='SIEM: OFF';
+  addSIEMLog('DISCONNECTED from SIEM','warn');
+}
+
+function testSIEM(){
+  if(!SIEM_STATE.connected){alert('Connect to a SIEM first.');return;}
+  sendTestEvent();
+}
+
+function sendTestEvent(){
+  const ev={id:uid(),ts:new Date().toISOString(),type:'TEST_EVENT',sev:'info',src:'NetGuard-IDS',msg:'Connection test — SIEM integration active',platform:SIEM_STATE.platform};
+  addSIEMLog(`TEST EVENT → ${SIEM_STATE.index}: ${JSON.stringify(ev).slice(0,80)}...`,'info');
+  DB.siemSent++;
+  document.getElementById('siem-sent').textContent=DB.siemSent;
+}
+
+function sendToSIEM(alert){
+  if(!SIEM_STATE.connected)return;
+  const platform=SIEM_STATE.platform;
+  let payload;
+  if(platform==='splunk'){
+    payload=`{"time":${Date.now()/1000},"index":"${SIEM_STATE.index}","event":{"id":"${alert.id}","type":"${alert.threat_type}","severity":"${alert.sev}","src":"${alert.src_ip}","dst":"${alert.dst_ip}","port":${alert.dst_port},"sig":"${alert.sig}"}}`;
+  } else if(platform==='elastic'){
+    payload=`{"@timestamp":"${alert.timestamp}","event.kind":"alert","threat.indicator.type":"${alert.threat_type}","source.ip":"${alert.src_ip}","destination.ip":"${alert.dst_ip}","rule.name":"${alert.sig}","event.severity":"${alert.sev}"}`;
+  } else if(platform==='qradar'||platform==='arcsight'||platform==='custom'){
+    payload=`CEF:0|NetGuard|IDS|3.0|${alert.sig}|${alert.threat_type}|${alert.sev==='critical'?10:alert.sev==='high'?8:alert.sev==='medium'?5:3}|src=${alert.src_ip} dst=${alert.dst_ip} dpt=${alert.dst_port} proto=${alert.protocol}`;
+  } else {
+    payload=JSON.stringify({id:alert.id,ts:alert.timestamp,type:alert.threat_type,sev:alert.sev,src:alert.src_ip,dst:alert.dst_ip,port:alert.dst_port,sig:alert.sig});
+  }
+  const ok=Math.random()>0.05;
+  if(ok){DB.siemSent++;addSIEMLog(`→ ${SIEM_STATE.index}: ${payload.slice(0,90)}...`,'acc');}
+  else{DB.siemFail++;addSIEMLog(`SEND_FAIL [retry]: ${alert.id}`,'danger');}
+  const sent=document.getElementById('siem-sent');const fail=document.getElementById('siem-fail');
+  if(sent)sent.textContent=DB.siemSent;if(fail)fail.textContent=DB.siemFail;
+}
+
+function renderSIEMStatus(override){
+  const el=document.getElementById('siemStatusList');if(!el)return;
+  const state=override||(SIEM_STATE.connected?'connected':SIEM_STATE.connecting?'connecting':'disconnected');
+  const label={connected:'Connected',disconnected:'Not connected',connecting:'Connecting…',error:'Error'}[state]||'Unknown';
+  const platform=SIEM_STATE.platform||document.getElementById('siem-platform').value;
+  const host=SIEM_STATE.host||'—';
+  el.innerHTML=`<div class="siem-status"><div class="siem-dot ${state}"></div><div><div class="siem-name">${platform.charAt(0).toUpperCase()+platform.slice(1)} SIEM</div><div class="siem-detail">${host}:${SIEM_STATE.port||document.getElementById('siem-port').value} · Index: ${SIEM_STATE.index||'—'} · Mode: ${SIEM_STATE.mode||'—'}</div></div><div style="margin-left:auto;font-size:11px;color:${state==='connected'?'var(--acc)':state==='connecting'?'var(--amber-t)':'var(--text3)'};">${label}</div></div>`;
+}
+
+let siemLogLines=[];
+function addSIEMLog(msg,type){
+  const line=`<div class="log-line"><span class="ts">${ts()}</span> <span class="evt-${type}">${msg}</span></div>`;
+  siemLogLines.unshift(line);if(siemLogLines.length>100)siemLogLines.pop();
+  const el=document.getElementById('siemLog');if(el)el.innerHTML=siemLogLines.slice(0,40).join('');
+  const rate=document.getElementById('siem-rate');if(rate)rate.textContent=Math.round(DB.siemSent/Math.max(1,(Date.now()-startTime)/60000));
+}
+
+const SCHEMA_ALERTS=[{n:'id',t:'UUID',pk:true,d:'Primary key'},{n:'timestamp',t:'TIMESTAMP',d:'Detection time UTC'},{n:'threat_type',t:'VARCHAR(64)',d:'IDS rule name'},{n:'severity',t:'ENUM',d:'critical/high/medium/low'},{n:'src_ip',t:'INET',d:'Source IP address'},{n:'dst_ip',t:'INET',d:'Destination IP'},{n:'dst_port',t:'INTEGER',d:'Destination port'},{n:'protocol',t:'VARCHAR(10)',d:'TCP/UDP/ICMP'},{n:'sig',t:'VARCHAR(32)',d:'Signature rule ID'},{n:'mitigated',t:'BOOLEAN',d:'Action taken flag'},{n:'siem_sent',t:'BOOLEAN',d:'Forwarded to SIEM'}];
+const SCHEMA_CONN=[{n:'id',t:'UUID',pk:true,d:'Primary key'},{n:'src_ip',t:'INET',d:'Source IP'},{n:'dst_ip',t:'INET',d:'Destination IP'},{n:'dst_port',t:'INTEGER',d:'Destination port'},{n:'protocol',t:'VARCHAR(10)',d:'Transport protocol'},{n:'packets',t:'BIGINT',d:'Total packets'},{n:'bytes',t:'BIGINT',d:'Total bytes'},{n:'is_suspicious',t:'BOOLEAN',d:'Flagged by IDS'}];
+const SCHEMA_HP=[{n:'id',t:'UUID',pk:true,d:'Primary key'},{n:'timestamp',t:'TIMESTAMP',d:'Event time'},{n:'honeypot_id',t:'VARCHAR(32)',fk:true,d:'→ honeypots.id'},{n:'attacker_ip',t:'INET',d:'Attacker source IP'},{n:'action',t:'VARCHAR(64)',d:'login_attempt/scan/payload'},{n:'credential_used',t:'TEXT',d:'Username:password tried'}];
+
+function renderDB(){
+  document.getElementById('db-alerts').textContent=DB.alerts.length;
+  document.getElementById('db-conns').textContent=DB.connections.length;
+  document.getElementById('db-hp').textContent=DB.hp_events.length;
+  function rs(id,schema){const el=document.getElementById(id);if(!el)return;el.innerHTML=schema.map(f=>`<div class="schema-field"><span class="fn">${f.n}</span><span class="ft">${f.t}</span>${f.pk?'<span class="pk2">PK</span>':f.fk?'<span class="fk2">FK</span>':''}<span class="fd">${f.d}</span></div>`).join('');}
+  rs('schema-alerts',SCHEMA_ALERTS);rs('schema-conn',SCHEMA_CONN);rs('schema-hp',SCHEMA_HP);
+}
+
+const CASES=[
+  {icon:'ti-bug',title:'APT29 supply chain compromise',org:'Fortune 500 tech company',date:'2024-03',sev:'critical',steps:[{t:'T+0h',text:'Malicious DLL via signed update. IDS missed initial exec.',done:true},{t:'T+2h',text:'C2 beacon: unusual HTTPS to new domain. DNS tunneling rule fired.',done:true},{t:'T+6h',text:'Lateral movement via WMI to 14 hosts. SMB anomaly → high alert.',warn:true},{t:'T+8h',text:'Honeypot captured root:toor123 — attacker fingerprinted.',done:true},{t:'T+9h',text:'VLAN segmented. SIEM alerted SOC. IR engaged.',done:true}],outcome:'Contained in 9h. 0 data exfiltrated post-detection.'},
+  {icon:'ti-wave-saw-tool',title:'Mirai botnet DDoS amplification',org:'ISP / Hosting provider',date:'2024-07',sev:'high',steps:[{t:'T+0m',text:'UDP flood: 48k pps. DDOS_UDP_005 triggered.',done:true},{t:'T+1m',text:'847 botnet IPs auto-blocked at edge.',done:true},{t:'T+7m',text:'HTTP flood: 2.1M req/min. Rate limiting + honeypot sinkhole.',done:true},{t:'T+22m',text:'Attack subsided. SLA: 99.97%. IOCs exported to SIEM.',done:true}],outcome:'Zero downtime. 22-min window. TTPs logged to QRadar.'},
+  {icon:'ti-lock-open',title:'SSH credential stuffing campaign',org:'Financial SaaS',date:'2025-01',sev:'high',steps:[{t:'Day 1',text:'Low-rate SSH from 200+ IPs. Per-IP threshold evaded.',done:true},{t:'Day 2',text:'Aggregate model: >10k failed auths in 24h — triggered.',warn:true},{t:'Day 2',text:'Honeypot captured 47 credential pairs.',done:true},{t:'Day 3',text:'ASN-level block. MFA enforced. Splunk alert fired.',done:true}],outcome:'No compromise. 47 IOCs added to threat intel feed.'},
+];
+
+function renderCases(){
+  const el=document.getElementById('caseList');if(!el)return;
+  el.innerHTML=CASES.map(c=>`<div class="case-card"><div style="display:flex;align-items:flex-start;gap:9px;margin-bottom:8px;"><div style="width:34px;height:34px;border-radius:6px;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="ti ${c.icon}" style="color:var(--acc);font-size:16px" aria-hidden="true"></i></div><div><div style="font-size:13px;font-weight:500;color:var(--text)">${c.title}</div><div style="font-size:10px;color:var(--text3)">${c.org} · ${c.date} · <span class="tag ${c.sev==='critical'?'red':'amber'}">${c.sev.toUpperCase()}</span></div></div></div><div class="tl">${c.steps.map(s=>`<div class="t-step ${s.warn?'warn':'done'}"><div class="t-time">${s.t}</div><div class="t-text">${s.text}</div></div>`).join('')}</div><div style="margin-top:8px;font-size:11px;color:var(--acc);background:var(--acc-bg);border:1px solid var(--border2);padding:5px 9px;border-radius:5px;"><i class="ti ti-check" aria-hidden="true"></i> ${c.outcome}</div></div>`).join('');
+}
+
+const MITIGATIONS=[
+  {icon:'ti-ban',bg:'var(--danger-bg)',ic:'var(--danger)',title:'Block attacker IP',desc:'Auto-add source IPs to iptables DENY list. Immediate for critical, 5-min threshold for high.',priority:'critical',pt:'red'},
+  {icon:'ti-refresh',bg:'var(--warn-bg)',ic:'var(--warn)',title:'Rate limiting',desc:'Max 100 req/s HTTP, 10 auth/min SSH via tc-netem. Drop excess at edge.',priority:'high',pt:'amber'},
+  {icon:'ti-shield-lock',bg:'var(--acc-bg)',ic:'var(--acc)',title:'Segment & isolate',desc:'Move suspect hosts to quarantine VLAN. Disable lateral SMB/RDP routes.',priority:'high',pt:'amber'},
+  {icon:'ti-lock',bg:'var(--info-bg)',ic:'var(--info)',title:'Force MFA re-auth',desc:'Revoke sessions under brute-force. Require TOTP before new session.',priority:'medium',pt:'blue'},
+  {icon:'ti-bug',bg:'var(--warn-bg)',ic:'var(--amber-t)',title:'Honeypot redirect',desc:'Route scanners and brute-force sources to honeypot sinkhole. Capture TTPs.',priority:'medium',pt:'amber'},
+  {icon:'ti-plug',bg:'var(--info-bg)',ic:'var(--info)',title:'Push IOCs to SIEM',desc:'Forward blocked IPs, sigs, and hashes to SIEM. Trigger playbook correlation rules.',priority:'medium',pt:'blue'},
+  {icon:'ti-mail',bg:'var(--bg3)',ic:'var(--text2)',title:'Incident notification',desc:'Auto-create SIEM ticket. Alert SOC via PagerDuty. Escalate critical within 5 min.',priority:'low',pt:'gray'},
+];
+
+function renderMitigList(){
+  const el=document.getElementById('mitigList');if(!el)return;
+  el.innerHTML=MITIGATIONS.map(m=>`<div class="mitig-row"><div class="mitig-ico" style="background:${m.bg};border:1px solid var(--border);"><i class="ti ${m.icon}" style="color:${m.ic}" aria-hidden="true"></i></div><div><div style="display:flex;align-items:center;"><span class="mitig-title">${m.title}</span><span class="tag ${m.pt}" style="margin-left:7px;">${m.priority}</span></div><div class="mitig-desc">${m.desc}</div></div></div>`).join('');
+}
+
+function renderJSONFeed(){
+  const el=document.getElementById('jsonFeed');if(!el)return;
+  el.textContent=DB.alerts.slice(0,5).map(a=>JSON.stringify({id:a.id,ts:a.timestamp,type:a.threat_type,sev:a.sev,src:a.src_ip,dst:a.dst_ip,port:a.dst_port,sig:a.sig},null,1)).join('\n---\n')||'No events yet.';
+}
+
+async function aiAnalyse(){
+  const box=document.getElementById('ai-main');if(!box)return;
+  if(!DB.alerts.length){box.textContent='No alerts yet. Let traffic run for a few ticks.';return;}
+  box.innerHTML='<div class="ai-think"><i class="ti ti-brain" aria-hidden="true"></i> Analysing threat landscape<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  const summary=DB.alerts.slice(0,10).map(a=>`[${a.sev.toUpperCase()}] ${a.threat_type} from ${a.src_ip} sig:${a.sig}`).join('\n');
+  const hpSummary=DB.hp_events.slice(0,5).map(e=>`${e.attacker_ip} → ${e.honeypot_id}: ${e.action}${e.credential_used!=='—'?' cred:'+e.credential_used:''}`).join('\n');
+  const siemInfo=SIEM_STATE.connected?`SIEM connected: ${SIEM_STATE.platform} at ${SIEM_STATE.host}. Events sent: ${DB.siemSent}.`:'SIEM: not connected.';
+  const captureInfo=CAPTURE.targets.length?`Packet capture active on: ${CAPTURE.targets.map(t=>t.ip).join(', ')}`:'No capture targets configured.';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are a senior SOC analyst. Analyse IDS alerts, honeypot intelligence, SIEM status, and packet capture targets. Respond in 4 sections: THREAT ASSESSMENT, ATTACK PATTERNS (4 bullets), SIEM & CAPTURE STATUS, RECOMMENDED ACTIONS (4 bullets). Be direct and technical. Plain text only.',messages:[{role:'user',content:`IDS Alerts:\n${summary}\n\nHoneypot:\n${hpSummary||'None'}\n\n${siemInfo}\n${captureInfo}\n\nTotal alerts: ${DB.alerts.length}, blocked: ${DB.blocked}, SIEM sent: ${DB.siemSent}`}]})});
+    const d=await r.json();
+    box.textContent=d.content?.map(b=>b.text||'').join('')||'Analysis unavailable.';
+  }catch(e){box.textContent='API error: '+e.message;}
+}
+
+async function genMitigPlan(){
+  const box=document.getElementById('mitig-ai');if(!box)return;
+  if(!DB.alerts.length){box.textContent='No active threats yet.';return;}
+  box.innerHTML='<div class="ai-think"><i class="ti ti-brain" aria-hidden="true"></i> Generating plan<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  const top=DB.alerts.slice(0,8).map(a=>`${a.threat_type} (${a.sev}) from ${a.src_ip}`).join(', ');
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:'You are a network security engineer. Produce a 5-step prioritised mitigation plan. Each step: action name, specific command or config snippet, expected outcome. Be concrete.',messages:[{role:'user',content:`Active threats: ${top}. SIEM: ${SIEM_STATE.connected?SIEM_STATE.platform+' connected':'not connected'}. Capture targets: ${CAPTURE.targets.map(t=>t.ip).join(', ')||'none'}`}]})});
+    const d=await r.json();
+    box.textContent=d.content?.map(b=>b.text||'').join('')||'Plan unavailable.';
+  }catch(e){box.textContent='API error: '+e.message;}
+}
+
+document.getElementById('ip-port').addEventListener('change',function(){
+  document.getElementById('ip-custom-port').style.display=this.value==='custom'?'block':'none';
+});
+
+const startTime=Date.now();
+initSpark();renderProtos();genConnections();renderRecentAlerts();renderHoneypots();renderSIEMStatus();renderIPChips();
+
+let tick=0;
+setInterval(()=>{
+  tick++;
+  const pps=rnd(200,2800);DB.totalPkts+=pps;
+  const mb=(pps*1500/1e6).toFixed(2);
+  document.getElementById('m-pps').textContent=pps.toLocaleString();
+  document.getElementById('m-bps').textContent=mb+' MB/s';
+  const up=Math.floor((Date.now()-startTime)/1000);
+  document.getElementById('m-uptime').textContent=Math.floor(up/60)+':'+(up%60).toString().padStart(2,'0');
+  sparkData.push(pps);if(sparkData.length>30)sparkData.shift();
+  sparkChart.data.datasets[0].data=[...sparkData];sparkChart.update('none');
+  if(tick%3===0)renderProtos();
+  if(tick%4===0&&DB.connections.length<20)DB.connections.push({id:uid(),src_ip:pick(IPS),dst_ip:pick(DSTS),dst_port:pick(PORTS),protocol:pick(['TCP','UDP','TLS']),packets:rnd(10,5000),bytes:rnd(1024,1048576),sus:Math.random()<0.2});
+  if(Math.random()<0.2)addAlert();
+  if(Math.random()<0.12)addHoneypotEvent();
+  if(CAPTURE.active&&CAPTURE.targets.length){
+    const tgt=pick(CAPTURE.targets);
+    if(tgt)addPacketLog(pick(IPS),tgt.ip,pick(['TCP','UDP','ICMP']),pick(PORTS),rnd(40,1400),Math.random()<0.1?'danger':null);
+  }
+  updateMetrics();
+  if(document.getElementById('page-ai').classList.contains('active')&&tick%6===0)renderJSONFeed();
+},1300);
+</script>
+</body>
+</html>

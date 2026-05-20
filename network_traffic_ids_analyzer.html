@@ -1,0 +1,462 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-mono, monospace); }
+  .ids-root { padding: 1rem 0; color: var(--color-text-primary); }
+
+  .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .header-left { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 36px; height: 36px; background: #0F6E56; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .logo i { color: #9FE1CB; font-size: 20px; }
+  .title-block h1 { font-size: 16px; font-weight: 500; letter-spacing: 0.05em; color: var(--color-text-primary); }
+  .title-block p { font-size: 12px; color: var(--color-text-secondary); }
+  .live-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 500; color: #1D9E75; background: #E1F5EE; padding: 4px 10px; border-radius: 20px; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #1D9E75; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 1.25rem; }
+  .metric { background: var(--color-background-secondary); border-radius: 8px; padding: 12px 14px; }
+  .metric-label { font-size: 11px; color: var(--color-text-secondary); letter-spacing: 0.04em; margin-bottom: 4px; text-transform: uppercase; }
+  .metric-value { font-size: 22px; font-weight: 500; }
+  .metric-value.ok { color: #1D9E75; }
+  .metric-value.warn { color: #BA7517; }
+  .metric-value.danger { color: #A32D2D; }
+  .metric-value.neutral { color: var(--color-text-primary); }
+  .metric-sub { font-size: 11px; color: var(--color-text-secondary); margin-top: 2px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .panel { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: 10px; padding: 14px; }
+  .panel-title { font-size: 12px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+  .panel-title i { font-size: 15px; }
+
+  .traffic-wrap { position: relative; height: 120px; }
+  canvas.spark { width: 100%; height: 100%; }
+
+  .proto-bars { display: flex; flex-direction: column; gap: 7px; }
+  .proto-row { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+  .proto-name { width: 40px; color: var(--color-text-secondary); flex-shrink: 0; }
+  .proto-bar-bg { flex: 1; height: 7px; background: var(--color-background-secondary); border-radius: 4px; overflow: hidden; }
+  .proto-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+  .proto-pct { width: 34px; text-align: right; color: var(--color-text-secondary); flex-shrink: 0; }
+
+  .alert-list { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
+  .alert-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 8px; border: 0.5px solid var(--color-border-tertiary); font-size: 12px; animation: slideIn 0.3s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+  .alert-item.critical { background: #FCEBEB; border-color: #F09595; }
+  .alert-item.high { background: #FAEEDA; border-color: #FAC775; }
+  .alert-item.medium { background: #E6F1FB; border-color: #85B7EB; }
+  .alert-item.low { background: #EAF3DE; border-color: #97C459; }
+  .alert-icon { font-size: 16px; margin-top: 1px; flex-shrink: 0; }
+  .alert-item.critical .alert-icon { color: #A32D2D; }
+  .alert-item.high .alert-icon { color: #854F0B; }
+  .alert-item.medium .alert-icon { color: #185FA5; }
+  .alert-item.low .alert-icon { color: #3B6D11; }
+  .alert-body { flex: 1; min-width: 0; }
+  .alert-head { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+  .alert-type { font-weight: 500; color: var(--color-text-primary); }
+  .sev-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; font-weight: 500; }
+  .sev-badge.critical { background: #F7C1C1; color: #791F1F; }
+  .sev-badge.high { background: #FAC775; color: #412402; }
+  .sev-badge.medium { background: #B5D4F4; color: #042C53; }
+  .sev-badge.low { background: #C0DD97; color: #173404; }
+  .alert-detail { color: var(--color-text-secondary); font-size: 11px; word-break: break-all; }
+  .alert-time { font-size: 10px; color: var(--color-text-secondary); flex-shrink: 0; margin-top: 2px; }
+
+  .full-panel { margin-bottom: 12px; }
+
+  .conn-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .conn-table th { text-align: left; padding: 6px 10px; font-size: 10px; font-weight: 500; color: var(--color-text-secondary); letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .conn-table td { padding: 7px 10px; border-bottom: 0.5px solid var(--color-border-tertiary); color: var(--color-text-primary); }
+  .conn-table tr:last-child td { border-bottom: none; }
+  .conn-table tr:hover td { background: var(--color-background-secondary); }
+  .flag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 500; }
+  .flag.sus { background: #FAECE7; color: #712B13; }
+  .flag.ok { background: #EAF3DE; color: #27500A; }
+  .flag.block { background: #FCEBEB; color: #791F1F; }
+
+  .ai-panel { margin-bottom: 12px; }
+  .ai-box { background: var(--color-background-secondary); border-radius: 8px; padding: 14px; min-height: 80px; font-size: 13px; color: var(--color-text-primary); line-height: 1.6; position: relative; }
+  .ai-loading { display: flex; align-items: center; gap: 8px; color: var(--color-text-secondary); font-size: 12px; }
+  .ai-dots span { animation: dot 1.2s infinite; display: inline-block; } 
+  .ai-dots span:nth-child(2){animation-delay:.2s} .ai-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes dot{0%,80%,100%{opacity:0.2}40%{opacity:1}}
+  .ai-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .ai-actions button { font-size: 12px; padding: 5px 12px; }
+
+  .controls { display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .controls button { font-size: 12px; padding: 5px 14px; }
+  .filter-select { font-size: 12px; padding: 5px 10px; border: 0.5px solid var(--color-border-secondary); border-radius: 6px; background: var(--color-background-primary); color: var(--color-text-primary); cursor: pointer; }
+  .status-bar { display: flex; align-items: center; gap: 16px; font-size: 11px; color: var(--color-text-secondary); padding: 10px 0 2px; border-top: 0.5px solid var(--color-border-tertiary); margin-top: 4px; }
+  .status-bar span { display: flex; align-items: center; gap: 4px; }
+</style>
+
+<h2 class="sr-only">Network Traffic Analyzer and Intrusion Detection System dashboard showing live traffic, alerts, and AI-powered threat analysis.</h2>
+
+<div class="ids-root">
+  <div class="header">
+    <div class="header-left">
+      <div class="logo"><i class="ti ti-shield-lock" aria-hidden="true"></i></div>
+      <div class="title-block">
+        <h1>NetGuard IDS</h1>
+        <p>Intrusion Detection &amp; Traffic Analysis</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      <select class="filter-select" id="ifaceSelect">
+        <option>eth0 — 192.168.1.1</option>
+        <option>wlan0 — 10.0.0.1</option>
+        <option>lo — 127.0.0.1</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="toggleBtn" onclick="toggleCapture()"><i class="ti ti-player-pause" aria-hidden="true"></i> Pause</button>
+    <button onclick="clearAlerts()"><i class="ti ti-trash" aria-hidden="true"></i> Clear alerts</button>
+    <select class="filter-select" id="sevFilter" onchange="renderAlerts()">
+      <option value="all">All severities</option>
+      <option value="critical">Critical only</option>
+      <option value="high">High+</option>
+      <option value="medium">Medium+</option>
+    </select>
+    <button onclick="analyzeWithAI()" style="margin-left:auto;"><i class="ti ti-brain" aria-hidden="true"></i> AI Threat Analysis ↗</button>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Packets/sec</div>
+      <div class="metric-value neutral" id="m-pps">0</div>
+      <div class="metric-sub" id="m-pps-sub">↑ 0 MB/s</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Active Connections</div>
+      <div class="metric-value neutral" id="m-conn">0</div>
+      <div class="metric-sub" id="m-conn-sub">0 unique hosts</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Threats Detected</div>
+      <div class="metric-value ok" id="m-threats">0</div>
+      <div class="metric-sub" id="m-threats-sub">0 blocked</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Threat Level</div>
+      <div class="metric-value ok" id="m-level">LOW</div>
+      <div class="metric-sub" id="m-level-sub">All systems normal</div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-activity" aria-hidden="true"></i> Traffic Volume (30s)</div>
+      <div class="traffic-wrap">
+        <canvas id="sparkCanvas" role="img" aria-label="Sparkline chart showing network traffic over the last 30 seconds"></canvas>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-title"><i class="ti ti-layers-difference" aria-hidden="true"></i> Protocol Distribution</div>
+      <div class="proto-bars" id="protoBars"></div>
+    </div>
+  </div>
+
+  <div class="panel full-panel">
+    <div class="panel-title"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Live Alert Feed <span style="margin-left:auto;font-size:11px;font-weight:400;" id="alertCount">0 alerts</span></div>
+    <div class="alert-list" id="alertList">
+      <div style="color:var(--color-text-secondary);font-size:12px;padding:12px 0;">Monitoring… no threats detected yet.</div>
+    </div>
+  </div>
+
+  <div class="panel full-panel">
+    <div class="panel-title"><i class="ti ti-network" aria-hidden="true"></i> Connection Table (Top flows)</div>
+    <table class="conn-table" id="connTable">
+      <thead>
+        <tr>
+          <th>Source IP</th><th>Dest IP</th><th>Port</th><th>Proto</th><th>Packets</th><th>Bytes</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="connBody"></tbody>
+    </table>
+  </div>
+
+  <div class="panel ai-panel">
+    <div class="panel-title"><i class="ti ti-brain" aria-hidden="true"></i> AI Threat Intelligence</div>
+    <div class="ai-box" id="aiBox">
+      <span style="color:var(--color-text-secondary);font-size:12px;">Click "AI Threat Analysis" to get an in-depth assessment of current network activity and detected threats.</span>
+    </div>
+  </div>
+
+  <div class="status-bar">
+    <span><i class="ti ti-clock" aria-hidden="true"></i> <span id="uptime">00:00:00</span></span>
+    <span><i class="ti ti-database" aria-hidden="true"></i> <span id="totalPkts">0</span> packets captured</span>
+    <span><i class="ti ti-shield-check" aria-hidden="true"></i> IDS rules: 2,847 loaded</span>
+    <span><i class="ti ti-cpu" aria-hidden="true"></i> Engine: Snort-compatible</span>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const THREAT_TYPES = [
+  { name: 'Port Scan Detected', sev: 'high', icon: 'ti-scan', detail: src => `${src} scanned 45 ports in 2s. SYN flood pattern.` },
+  { name: 'SQL Injection Attempt', sev: 'critical', icon: 'ti-code', detail: src => `${src}:54321 → :80 — Payload: \`' OR 1=1--\` in HTTP POST` },
+  { name: 'Brute Force SSH', sev: 'high', icon: 'ti-lock-open', detail: src => `${src} attempted 120 logins in 60s on port 22.` },
+  { name: 'DNS Tunneling', sev: 'medium', icon: 'ti-topology-star-3', detail: src => `Anomalous DNS query length from ${src}. Possible exfil.` },
+  { name: 'DDoS Pattern', sev: 'critical', icon: 'ti-wave-saw-tool', detail: src => `UDP flood from ${src} — 48k pps on port 80.` },
+  { name: 'ARP Spoofing', sev: 'high', icon: 'ti-router', detail: src => `Duplicate ARP reply detected from ${src}.` },
+  { name: 'Malware C2 Beacon', sev: 'critical', icon: 'ti-bug', detail: src => `${src} → known C2 IP 45.33.32.156:4444. Cobalt Strike beacon.` },
+  { name: 'Suspicious TLS SNI', sev: 'medium', icon: 'ti-lock', detail: src => `${src} → freshly-registered domain (2d old). Possible phishing.` },
+  { name: 'ICMP Flood', sev: 'medium', icon: 'ti-wave-sine', detail: src => `${src} sent 9,200 ICMP echo requests in 10s.` },
+  { name: 'Lateral Movement', sev: 'high', icon: 'ti-arrows-horizontal', detail: src => `${src} attempting SMB connections to 18 internal hosts.` },
+  { name: 'Reconnaissance Probe', sev: 'low', icon: 'ti-eye', detail: src => `OS fingerprinting activity from ${src} — TTL anomaly.` },
+  { name: 'Exfiltration Attempt', sev: 'critical', icon: 'ti-cloud-upload', detail: src => `${src} → 185.220.101.x: 340MB transfer in 90s.` },
+];
+
+const PROTOS = [
+  { name: 'HTTP', color: '#378ADD', base: 35 },
+  { name: 'HTTPS', color: '#1D9E75', base: 40 },
+  { name: 'DNS', color: '#EF9F27', base: 12 },
+  { name: 'SSH', color: '#D4537E', base: 5 },
+  { name: 'Other', color: '#888780', base: 8 },
+];
+
+const IPS_POOL = [
+  '192.168.1.104','10.0.0.55','172.16.0.23','203.0.113.47','198.51.100.88',
+  '192.168.2.201','10.10.5.77','45.33.32.156','185.220.101.33','192.168.1.22',
+  '10.0.0.12','172.17.0.3','192.168.10.5','45.142.212.100','198.51.100.7',
+];
+const DESTS = ['192.168.1.1','8.8.8.8','10.0.0.1','185.220.101.x','192.168.1.254','172.16.0.1'];
+const PORTS = [80,443,22,53,3306,8080,4444,445,21,3389,25,110];
+
+let running = true, startTime = Date.now();
+let alerts = [], totalPkts = 0, blocked = 0, threatCount = 0;
+let sparkData = new Array(30).fill(0);
+let connections = [];
+let protoData = PROTOS.map(p => ({ ...p, pct: p.base }));
+let sparkChart;
+
+function rnd(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function randIp() { return pick(IPS_POOL); }
+function fmtTime(d) { return d.toTimeString().split(' ')[0]; }
+
+function initSpark() {
+  const canvas = document.getElementById('sparkCanvas');
+  const ctx = canvas.getContext('2d');
+  sparkChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: sparkData.map((_,i) => i),
+      datasets: [{
+        data: sparkData,
+        borderColor: '#1D9E75',
+        borderWidth: 2,
+        pointRadius: 0,
+        fill: true,
+        backgroundColor: 'rgba(29,158,117,0.1)',
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      animation: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: false },
+        y: { display: false, beginAtZero: true }
+      }
+    }
+  });
+}
+
+function updateSpark(pps) {
+  sparkData.push(pps);
+  if (sparkData.length > 30) sparkData.shift();
+  sparkChart.data.datasets[0].data = [...sparkData];
+  sparkChart.update('none');
+}
+
+function initProtos() {
+  const el = document.getElementById('protoBars');
+  el.innerHTML = protoData.map(p => `
+    <div class="proto-row">
+      <span class="proto-name">${p.name}</span>
+      <div class="proto-bar-bg"><div class="proto-bar-fill" id="pb-${p.name}" style="width:${p.pct}%;background:${p.color}"></div></div>
+      <span class="proto-pct" id="pp-${p.name}">${p.pct}%</span>
+    </div>`).join('');
+}
+
+function updateProtos() {
+  let vals = protoData.map(p => p.base + rnd(-5, 5));
+  const total = vals.reduce((a,b) => a+b, 0);
+  vals = vals.map(v => Math.max(1, Math.round(v / total * 100)));
+  protoData.forEach((p, i) => {
+    p.pct = vals[i];
+    const bar = document.getElementById('pb-' + p.name);
+    const pct = document.getElementById('pp-' + p.name);
+    if (bar) bar.style.width = p.pct + '%';
+    if (pct) pct.textContent = p.pct + '%';
+  });
+}
+
+function genConnection() {
+  const src = randIp(), dst = pick(DESTS), port = pick(PORTS);
+  const protos = ['TCP','UDP','ICMP','TLS'];
+  const statuses = ['ok','ok','ok','ok','sus','block'];
+  return { src, dst, port, proto: pick(protos), pkts: rnd(10, 5000), bytes: rnd(1024, 1048576), status: pick(statuses) };
+}
+
+function updateConnections() {
+  if (connections.length < 8) connections.push(genConnection());
+  else {
+    connections[rnd(0, 7)] = genConnection();
+  }
+  const body = document.getElementById('connBody');
+  body.innerHTML = connections.slice(0, 8).map(c => {
+    const kb = c.bytes > 1024*1024 ? (c.bytes/1048576).toFixed(1)+'MB' : (c.bytes/1024).toFixed(0)+'KB';
+    const flagHtml = `<span class="flag ${c.status}">${c.status === 'ok' ? 'Clean' : c.status === 'sus' ? 'Suspect' : 'Blocked'}</span>`;
+    return `<tr><td>${c.src}</td><td>${c.dst}</td><td>${c.port}</td><td>${c.proto}</td><td>${c.pkts.toLocaleString()}</td><td>${kb}</td><td>${flagHtml}</td></tr>`;
+  }).join('');
+}
+
+function addAlert(threat, src) {
+  const now = new Date();
+  const a = { ...threat, src, time: fmtTime(now), id: Date.now() };
+  alerts.unshift(a);
+  if (alerts.length > 50) alerts.pop();
+  threatCount++;
+  if (a.sev === 'critical' || a.sev === 'high') blocked++;
+  renderAlerts();
+  updateThreatLevel();
+}
+
+function renderAlerts() {
+  const filter = document.getElementById('sevFilter').value;
+  const sevOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+  const filtered = alerts.filter(a => {
+    if (filter === 'all') return true;
+    if (filter === 'critical') return a.sev === 'critical';
+    if (filter === 'high') return sevOrder[a.sev] >= 3;
+    if (filter === 'medium') return sevOrder[a.sev] >= 2;
+    return true;
+  });
+  const el = document.getElementById('alertList');
+  document.getElementById('alertCount').textContent = filtered.length + ' alerts';
+  if (!filtered.length) { el.innerHTML = '<div style="color:var(--color-text-secondary);font-size:12px;padding:8px 0;">No alerts match filter.</div>'; return; }
+  el.innerHTML = filtered.slice(0, 20).map(a => `
+    <div class="alert-item ${a.sev}">
+      <i class="ti ${a.icon} alert-icon" aria-hidden="true"></i>
+      <div class="alert-body">
+        <div class="alert-head">
+          <span class="alert-type">${a.name}</span>
+          <span class="sev-badge ${a.sev}">${a.sev.toUpperCase()}</span>
+        </div>
+        <div class="alert-detail">${a.detail(a.src)}</div>
+      </div>
+      <div class="alert-time">${a.time}</div>
+    </div>`).join('');
+}
+
+function updateThreatLevel() {
+  const criticals = alerts.filter(a => a.sev === 'critical').length;
+  const highs = alerts.filter(a => a.sev === 'high').length;
+  const el = document.getElementById('m-level');
+  const sub = document.getElementById('m-level-sub');
+  if (criticals >= 3) { el.textContent = 'CRITICAL'; el.className = 'metric-value danger'; sub.textContent = 'Immediate action required!'; }
+  else if (criticals >= 1 || highs >= 3) { el.textContent = 'HIGH'; el.className = 'metric-value danger'; sub.textContent = 'Active threats detected'; }
+  else if (highs >= 1 || alerts.length >= 3) { el.textContent = 'MEDIUM'; el.className = 'metric-value warn'; sub.textContent = 'Elevated risk'; }
+  else { el.textContent = 'LOW'; el.className = 'metric-value ok'; sub.textContent = 'All systems normal'; }
+}
+
+function updateUptime() {
+  const s = Math.floor((Date.now() - startTime) / 1000);
+  const h = String(Math.floor(s/3600)).padStart(2,'0');
+  const m = String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const sec = String(s%60).padStart(2,'0');
+  document.getElementById('uptime').textContent = `${h}:${m}:${sec}`;
+}
+
+let tickCount = 0;
+function tick() {
+  if (!running) return;
+  tickCount++;
+  const pps = rnd(200, 2800);
+  const mbps = (pps * 1500 / 1e6).toFixed(2);
+  totalPkts += pps;
+
+  document.getElementById('m-pps').textContent = pps.toLocaleString();
+  document.getElementById('m-pps-sub').textContent = `↑ ${mbps} MB/s`;
+  document.getElementById('m-conn').textContent = rnd(42, 180);
+  document.getElementById('m-conn-sub').textContent = rnd(8, 35) + ' unique hosts';
+  document.getElementById('m-threats').textContent = threatCount;
+  document.getElementById('m-threats-sub').textContent = blocked + ' blocked';
+  document.getElementById('totalPkts').textContent = totalPkts.toLocaleString();
+
+  updateSpark(pps);
+  if (tickCount % 3 === 0) updateProtos();
+  if (tickCount % 2 === 0) updateConnections();
+  updateUptime();
+
+  if (Math.random() < 0.18) {
+    const t = pick(THREAT_TYPES);
+    addAlert(t, randIp());
+  }
+}
+
+function toggleCapture() {
+  running = !running;
+  const btn = document.getElementById('toggleBtn');
+  btn.innerHTML = running ? '<i class="ti ti-player-pause" aria-hidden="true"></i> Pause' : '<i class="ti ti-player-play" aria-hidden="true"></i> Resume';
+}
+
+function clearAlerts() {
+  alerts = [];
+  threatCount = 0;
+  blocked = 0;
+  renderAlerts();
+  updateThreatLevel();
+  document.getElementById('m-threats').textContent = '0';
+  document.getElementById('m-threats-sub').textContent = '0 blocked';
+}
+
+async function analyzeWithAI() {
+  const box = document.getElementById('aiBox');
+  if (!alerts.length) { box.innerHTML = '<span style="color:var(--color-text-secondary);font-size:12px;">No alerts to analyze yet. Let traffic run for a few seconds.</span>'; return; }
+  box.innerHTML = '<div class="ai-loading"><i class="ti ti-brain" aria-hidden="true"></i> Analyzing threat data<span class="ai-dots"><span>.</span><span>.</span><span>.</span></span></div>';
+
+  const summary = alerts.slice(0, 12).map(a => `[${a.sev.toUpperCase()}] ${a.name} from ${a.src}: ${a.detail(a.src)}`).join('\n');
+  const protoSummary = protoData.map(p => `${p.name}: ${p.pct}%`).join(', ');
+  const critCount = alerts.filter(a=>a.sev==='critical').length;
+  const highCount = alerts.filter(a=>a.sev==='high').length;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a senior cybersecurity analyst and IDS expert. Analyze network traffic alerts and provide concise, actionable threat intelligence. Be direct and technical. Format your response in 3 short sections: 1) Threat Assessment (2-3 sentences), 2) Attack Pattern Analysis (bullet points, max 4), 3) Recommended Actions (bullet points, max 4). Use plain text, no markdown headers.`,
+        messages: [{
+          role: 'user',
+          content: `Analyze these live IDS alerts and traffic data:\n\nAlerts (${alerts.length} total, ${critCount} critical, ${highCount} high):\n${summary}\n\nProtocol mix: ${protoSummary}\nTotal packets captured: ${totalPkts.toLocaleString()}`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content?.map(b => b.text || '').join('') || 'Analysis unavailable.';
+    box.innerHTML = `<div style="font-size:13px;line-height:1.7;white-space:pre-wrap;">${text}</div>
+      <div class="ai-actions">
+        <button onclick="analyzeWithAI()"><i class="ti ti-refresh" aria-hidden="true"></i> Refresh Analysis ↗</button>
+        <button onclick="sendPrompt('What specific mitigations should I implement for these network threats: ${alerts.slice(0,3).map(a=>a.name).join(', ')}?')">Get mitigation steps ↗</button>
+      </div>`;
+  } catch(e) {
+    box.innerHTML = `<div style="color:var(--color-text-secondary);font-size:12px;">Unable to reach AI endpoint. Ensure API access is configured.<br><br>Error: ${e.message}</div>`;
+  }
+}
+
+initSpark();
+initProtos();
+updateConnections();
+setInterval(tick, 1200);
+tick();
+</script>
+

